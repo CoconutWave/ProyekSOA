@@ -3,6 +3,8 @@ const app = express();
 const port = 8000;
 const {executeQuery} = require("./database");
 
+const users = require("./routes/users");
+
 /*
 
 219116852 - Indah Cahyani Styoningrum
@@ -11,6 +13,13 @@ const {executeQuery} = require("./database");
 219116860 - Steven Liem
 
 */
+app.get("/api/test", function (req, res) {
+    return res.status(200).send({message: "Berhasil"});
+});
+
+app.use("/api/users", users);
+
+
 
 
 app.use(express.urlencoded({extended: true}));
