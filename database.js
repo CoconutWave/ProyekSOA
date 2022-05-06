@@ -3,7 +3,7 @@ let pool = mysql.createPool({
     host: "localhost",
     user: "root",
     password: "",
-    database: "proyek_soa"
+    database: "soaproject_hotel_flight"
 });
 
 const executeQuery = async (query) => {

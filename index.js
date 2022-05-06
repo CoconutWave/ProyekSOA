@@ -4,6 +4,8 @@ const port = 8000;
 const {executeQuery} = require("./database");
 
 const users = require("./routes/users");
+app.use(express.urlencoded({extended: true}));
+
 
 /*
 
@@ -22,7 +24,6 @@ app.use("/api/users", users);
 
 
 
-app.use(express.urlencoded({extended: true}));
 
 app.listen(port, function () {
     console.log("API online, listening to port "+port);
