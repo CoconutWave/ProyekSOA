@@ -9,7 +9,10 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@joi/date": "^2.1.0",
     "express": "^4.17.3",
-    "mysql": "^2.18.1"
+    "joi": "^17.6.0",
+    "mysql": "^2.18.1",
+    "nodemon": "^2.0.16"
   }
 }

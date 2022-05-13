@@ -1,11 +1,11 @@
 const express = require("express");
 const app = express();
-const port = 8000;
+const port = 3000;
 const {executeQuery} = require("./database");
 
 const users = require("./routes/users");
+const admin = require("./routes/admin");
 app.use(express.urlencoded({extended: true}));
-
 
 /*
 
@@ -21,9 +21,7 @@ app.get("/api/test", function (req, res) {
 
 app.use("/api/users", users);
 
-
-
-
+app.use("/api/admin", admin);
 
 app.listen(port, function () {
     console.log("API online, listening to port "+port);
