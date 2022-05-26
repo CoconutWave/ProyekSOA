@@ -5,7 +5,7 @@ const {executeQuery} = require("./database");
 
 const users = require("./routes/users");
 const admin = require("./routes/admin");
-app.use(express.urlencoded({extended: true}));
+// app.use(express.urlencoded({extended: true}));
 
 /*
 
@@ -16,7 +16,7 @@ app.use(express.urlencoded({extended: true}));
 
 */
 app.get("/api/test", function (req, res) {
-    return res.status(200).send({message: "Berhasil"});
+    return res.status(200).send({message: "Berhasil a"});
 });
 
 app.use("/api/users", users);

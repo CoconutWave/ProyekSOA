@@ -2,6 +2,20 @@ const express = require("express");
 const Joi = require('joi').extend(require('@joi/date'));
 const router = express.Router();
 const {executeQuery} = require("../database");
+const multer = require("multer");
+const fs = require("fs");
+
+const storage = multer.diskStorage({
+    destination: "uploads/",
+    filename: function (req, file, cb) {
+        // let date = new Date();
+        // console.log(date.toString());
+        cb(null, req.header("x-auth-token"));
+    }
+});
+const upload = multer({
+    storage: storage
+});
 
 const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
 
@@ -15,7 +29,7 @@ const generateUniqueApikey = (length) => {
 }
 
 //register new user
-router.post("/register", async function (req, res) {
+router.post("/register",upload.none(), async function (req, res) {
     console.log(req.body);
     const schema =
         Joi.object({
@@ -77,7 +91,7 @@ router.post("/register", async function (req, res) {
 });
 
 //generate key??
-router.post("/login", async function (req, res) {
+router.post("/login",upload.none(), async function (req, res) {
     const schema =
         Joi.object({
             email: Joi.string().email({ minDomainSegments:2 }).required(),
@@ -105,6 +119,11 @@ router.post("/login", async function (req, res) {
                 "message" : "Password tidak benar"
             })
         }
+        return res.status(200).send({
+            message: "Berhasil login!",
+            token: "abcd",
+            api_key: users[0].apikey
+        })
 
 
     } catch (error) {
@@ -114,7 +133,7 @@ router.post("/login", async function (req, res) {
 });
 
 //update user
-router.put("/update", async function (req, res) {
+router.put("/update", upload.none(), async function (req, res) {
     let header = req.header('x-auth-token');
 
     if(!req.header('x-auth-token')) {
@@ -172,8 +191,27 @@ router.put("/update", async function (req, res) {
 });
 
 //update photo-user
-router.put("/updatePhoto", async function (req, res) {
+router.put("/updatePhoto",upload.single("IDCard"), async function (req, res) {
+    let header = req.header('x-auth-token');
+    req.body.ktpapikey = header;
 
+    if(!req.header('x-auth-token')) {
+        return res.status(401).send("Unauthorized");
+    }else{
+        const user = await executeQuery(`select * 
+        from users 
+        where apikey = '${header}'
+        and is_active = 1`);
+        if(user.length<1) {
+            console.log("USER_NOT_FOUND")
+            fs.unlinkSync(`../uploads/${header}`);
+            return res.status(401).send({
+                "message" : "User not found"
+            });
+        }
+
+
+    }
 
 });
 

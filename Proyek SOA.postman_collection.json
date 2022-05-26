@@ -1,0 +1,191 @@
+{
+	"info": {
+		"_postman_id": "f3d572a9-6e62-482a-9414-17af21b9313f",
+		"name": "Proyek SOA",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "20688411"
+	},
+	"item": [
+		{
+			"name": "Test",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:3000/api/test",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"api",
+						"test"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Register",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "fname",
+							"value": "John",
+							"type": "text"
+						},
+						{
+							"key": "lname",
+							"value": "Kazimir",
+							"type": "text"
+						},
+						{
+							"key": "email",
+							"value": "jayjay.max@mail.com",
+							"type": "text"
+						},
+						{
+							"key": "password",
+							"value": "asdfasdf",
+							"type": "text"
+						},
+						{
+							"key": "confirm_password",
+							"value": "asdfasdf",
+							"type": "text"
+						},
+						{
+							"key": "date_of_birth",
+							"value": "11/05/1996",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "localhost:3000/api/users/register",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"api",
+						"users",
+						"register"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "localhost:3000/api/users/login",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "email",
+							"value": "jayjay.max@mail.com",
+							"type": "text"
+						},
+						{
+							"key": "password",
+							"value": "asdfasdf",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "localhost:3000/api/users/login",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"api",
+						"users",
+						"login"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "localhost:3000/api/users/update",
+			"request": {
+				"method": "PUT",
+				"header": [
+					{
+						"key": "x-auth-token",
+						"value": "yDx4YM74IJ",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "fname",
+							"value": "Jeremy",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "localhost:3000/api/users/update",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"api",
+						"users",
+						"update"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "localhost:3000/api/users/updatePhoto",
+			"request": {
+				"method": "PUT",
+				"header": [
+					{
+						"key": "x-auth-token",
+						"value": "yDx4YM74IJ",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "IDCard",
+							"type": "file",
+							"src": "/E:/Design/651887-yakuza-kiwami-windows-apps-front-cover.jpg"
+						}
+					]
+				},
+				"url": {
+					"raw": "localhost:3000/api/users/updatePhoto",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"api",
+						"users",
+						"updatePhoto"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}
