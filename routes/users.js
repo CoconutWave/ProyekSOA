@@ -5,6 +5,7 @@ const {executeQuery} = require("../database");
 const multer = require("multer");
 const fs = require("fs");
 
+
 const storage = multer.diskStorage({
     destination: "uploads/",
     filename: function (req, file, cb) {
@@ -213,6 +214,14 @@ router.put("/updatePhoto",upload.single("IDCard"), async function (req, res) {
 
     }
 
+});
+
+router.get("/searchFlight", upload.none(), async function (req, res) {
+    try {
+        axios
+    } catch (error) {
+        
+    }
 });
 
 
