@@ -4,7 +4,7 @@ const router = express.Router();
 const {executeQuery} = require("../database");
 const multer = require("multer");
 const fs = require("fs");
-
+const axios = require("axios");
 
 const storage = multer.diskStorage({
     destination: "uploads/",
@@ -206,7 +206,7 @@ router.put("/updatePhoto",upload.single("IDCard"), async function (req, res) {
         if(user.length<1) {
             console.log("USER_NOT_FOUND")
             fs.unlinkSync(`../uploads/${header}`);
-            return res.status(401).send({
+            return res.status(404).send({
                 "message" : "User not found"
             });
         }
@@ -216,11 +216,47 @@ router.put("/updatePhoto",upload.single("IDCard"), async function (req, res) {
 
 });
 
+//search flight
 router.get("/searchFlight", upload.none(), async function (req, res) {
-    try {
-        axios
-    } catch (error) {
-        
+    let header = req.header('x-auth-token');
+    if(!req.header('x-auth-token')){
+        return res.status(400).send({
+            message: "Unauthorized!"
+        });
+    }else{
+        if(!req.body.airportCode){
+            return res.status(400).send({message:"Empty field!"});
+        }
+        let airportCode = req.body.airportCode;
+        try {
+            await axios.get(`​/airport​/direct-destinations?departureAirportCode=${airportCode}`);
+            await executeQuery(`update users set apihit = apihit - 1 where apikey = "${header}"`);
+            return res.status(200).send({
+                message: "Search success!"
+            });
+        } catch (error) {
+            return res.status(400).send({
+                message: "Internal error!"
+            });
+        }
+    }
+});
+
+//search hotel
+router.get("/searchHotel", upload.none(), async function (req, res) {
+    let header = req.header('x-auth-token');
+    if(!req.header('x-auth-token')){
+        return res.status(400).send({
+            message: "Unauthorized!"
+        });
+    }else{
+        try {
+            await axios.get("");
+        } catch (error) {
+            return res.status(400).send({
+                message: "Internal error!"
+            });
+        }
     }
 });
 
