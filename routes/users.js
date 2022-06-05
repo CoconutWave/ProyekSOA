@@ -20,6 +20,8 @@ const upload = multer({
 
 const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
 
+const key = "Bearer MbX8jeji6ufUn6RqnWDJGA5GVB9C";
+
 const generateUniqueApikey = (length) => {
     let apikey = "";
     for (let i = 0; i < length; i++) {
@@ -27,6 +29,14 @@ const generateUniqueApikey = (length) => {
     }
     console.log("Generated API: "+apikey);
     return apikey;
+}
+
+const checkCode = (name) => {
+
+}
+
+const checkName = (code) => {
+
 }
 
 //register new user
@@ -217,22 +227,141 @@ router.put("/updatePhoto",upload.single("IDCard"), async function (req, res) {
 });
 
 //search flight
-router.get("/searchFlight", upload.none(), async function (req, res) {
+router.get("/searchFlight/:airportCode", upload.none(), async function (req, res) {
+    //Departure Airport code following IATA standard
     let header = req.header('x-auth-token');
     if(!req.header('x-auth-token')){
         return res.status(400).send({
             message: "Unauthorized!"
         });
-    }else{
-        if(!req.body.airportCode){
+    }
+    else{
+        //await executeQuery(`update users set apihit = apihit - 1 where apikey = "${header}"`);
+        if(req.params.airportCode) {
+            //sesuai code
+            let departureAirportCode = req.params.airportCode.toUpperCase();
+            // try {
+            //     await axios.get(`​/airport​/direct-destinations?departureAirportCode=${airportCode}`);
+            //     return res.status(200).send({
+            //         message: "Search success!"
+            //     });
+            // } catch (error) {
+            //     return res.status(400).send({
+            //         message: "Internal error!"
+            //     });
+            // }
+
+            try {
+                let hasil = await axios.get(
+                    `https://test.api.amadeus.com/v1/airport/direct-destinations?departureAirportCode=${departureAirportCode}`,
+                    {
+                        headers: {
+                            'Authorization': key
+                        }
+                    })
+                let data = hasil.data.data;
+                console.log(data);
+
+                let departure_offer = [];
+                for(let i=0; i<data.length;i++) {
+                    let temp = {
+                        "destination" : data[i].name,
+                        "iataCode" : data[i].iataCode,
+                    }
+                    departure_offer.push(temp);
+                }
+
+                return res.status(200).send({
+                    body: {
+                        "count" : data.length,
+                        "departure_offer" : departure_offer
+                    }
+                });
+            } catch (error) {
+                return res.status(400).send({
+                    message: "Internal error!"
+                });
+            }
+
+        } else {
             return res.status(400).send({message:"Empty field!"});
         }
-        let airportCode = req.body.airportCode;
+    }
+});
+
+//flight options
+router.get("/optionsFlight/", upload.none(), async function (req, res) {
+    let header = req.header('x-auth-token');
+    if(!req.header('x-auth-token')){
+        return res.status(400).send({
+            message: "Unauthorized!"
+        });
+    }
+    else{
+        const schema =
+            Joi.object({
+                originLocation: Joi.string().required(),
+                destinationLocation: Joi.string().required(),
+                departure_date: Joi.date().format('YYYY-MM-DD').required(),
+                adults: Joi.number().min(1).required(),
+            })
+
         try {
-            await axios.get(`​/airport​/direct-destinations?departureAirportCode=${airportCode}`);
-            await executeQuery(`update users set apihit = apihit - 1 where apikey = "${header}"`);
+            await schema.validateAsync(req.body);
+        } catch (error) {
+            return res.status(403).send(error.toString());
+        }
+
+        console.log(req.body);
+        try {
+            //await executeQuery(`update users set apihit = apihit - 1 where apikey = "${header}"`);
+
+            let origin = req.body.originLocation.toUpperCase();
+            let dest = req.body.destinationLocation.toUpperCase();
+            let departure_date = req.body.departure_date;
+            let adults = Number(req.body.adults);
+
+            // let returnDate,children,infants,travelClass,includedAirlineCodes,excludedAirlineCodes,nonStop,currencyCode,maxPrice,max;
+            // if(req.body.returnDate) returnDate = req.body.returnDate;
+            // if(req.body.children) children = req.body.children;
+            // if(req.body.infants) infants = req.body.infants;
+            // if(req.body.travelClass) travelClass = req.body.travelClass;
+            // if(req.body.includedAirlineCodes) includedAirlineCodes = req.body.includedAirlineCodes;
+            // if(req.body.excludedAirlineCodes) excludedAirlineCodes = req.body.excludedAirlineCodes;
+            // if(req.body.nonStop) nonStop = req.body.nonStop;
+            // if(req.body.currencyCode) currencyCode = req.body.currencyCode;
+            // if(req.body.maxPrice) maxPrice = req.body.maxPrice;
+            // if(req.body.max) max = req.body.max;
+
+            let hasil = await axios.get(
+                `https://test.api.amadeus.com/v2/shopping/flight-offers?originLocationCode=${origin}&destinationLocationCode=${dest}&departureDate=${departure_date}&adults=${adults}`,
+                {
+                    headers: {
+                        'Authorization': key
+                    }
+                })
+            let data = hasil.data.data;
+            console.log(data);
+
+            let flight_offer = [];
+            for(let i=0; i<data.length;i++) {
+                let temp = {
+                    "source" : data[i].source,
+                    "lastTicketingDate" : data[i].lastTicketingDate,
+                    "numberOfBookableSeats" : data[i].numberOfBookableSeats,
+                    "itineraries" : data[i].itineraries,
+                    "price" : data[i].price.currency + " " + data[i].price.total,
+                    "validatingAirlineCodes" : data[i].validatingAirlineCodes,
+                    "travelerPricings" : data[i].travelerPricings
+                }
+                flight_offer.push(temp);
+            }
+
             return res.status(200).send({
-                message: "Search success!"
+                body: {
+                    "count" : data.length,
+                    "flight_offer" : flight_offer
+                }
             });
         } catch (error) {
             return res.status(400).send({
@@ -243,7 +372,7 @@ router.get("/searchFlight", upload.none(), async function (req, res) {
 });
 
 //search hotel
-router.get("/searchHotel", upload.none(), async function (req, res) {
+router.get("/searchHotel/:idCity", upload.none(), async function (req, res) {
     let header = req.header('x-auth-token');
     if(!req.header('x-auth-token')){
         return res.status(400).send({
@@ -251,7 +380,40 @@ router.get("/searchHotel", upload.none(), async function (req, res) {
         });
     }else{
         try {
-            await axios.get("");
+            let idCity = req.params.idCity.toUpperCase();
+            let hasil = await axios.get(
+                `https://test.api.amadeus.com/v1/reference-data/locations/hotels/by-city?cityCode=${idCity}`,
+                {
+                    headers: {
+                        'Authorization': key
+                    }
+                })
+            // let hasil = await axios.get(
+            //     `https://test.api.amadeus.com/v2/shopping/hotel-offers?cityCode=${idCity}`,
+            //     {
+            //         headers: {
+            //             'Authorization': key
+            //         }
+            //     })
+            let data = hasil.data.data;
+            console.log(data);
+
+            let hotel = [];
+            for(let i=0; i<10;i++) {
+                let temp = {
+                    "name" : data[i].name,
+                    "hotelId" : data[i].hotelId,
+                    "countryCode" : data[i].address.countryCode
+                }
+                hotel.push(temp);
+            }
+
+            return res.status(200).send({
+                body: {
+                    "count" : data.length,
+                    "hotel" : hotel
+                }
+            });
         } catch (error) {
             return res.status(400).send({
                 message: "Internal error!"
@@ -259,6 +421,7 @@ router.get("/searchHotel", upload.none(), async function (req, res) {
         }
     }
 });
+
 
 
 module.exports = router;
