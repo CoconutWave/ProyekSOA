@@ -20,7 +20,7 @@ const upload = multer({
 
 const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
 
-const key = "Bearer MbX8jeji6ufUn6RqnWDJGA5GVB9C";
+const key = "Bearer DUwsVtyGCZA4A3MgKB2LC8sPjA9Q";
 
 const generateUniqueApikey = (length) => {
     let apikey = "";
@@ -29,14 +29,6 @@ const generateUniqueApikey = (length) => {
     }
     console.log("Generated API: "+apikey);
     return apikey;
-}
-
-const checkCode = (name) => {
-
-}
-
-const checkName = (code) => {
-
 }
 
 //register new user
@@ -371,7 +363,7 @@ router.get("/optionsFlight/", upload.none(), async function (req, res) {
     }
 });
 
-//search hotel
+//search hotel (masukin nama kotanya)
 router.get("/searchHotel/:idCity", upload.none(), async function (req, res) {
     let header = req.header('x-auth-token');
     if(!req.header('x-auth-token')){
@@ -379,31 +371,64 @@ router.get("/searchHotel/:idCity", upload.none(), async function (req, res) {
             message: "Unauthorized!"
         });
     }else{
+        let idCity = req.params.idCity.toUpperCase();
+        let cityName = await axios.get(
+            `https://test.api.amadeus.com/v1/reference-data/locations?subType=CITY&keyword=${idCity}`,
+            {
+                headers: {
+                    'Authorization': key
+                }
+            })
+        let city = cityName.data.data;
+
+        let numb = -1;
+        for(let i=0; i<city.length;i++) {
+            if(city[i].name.includes(idCity)) numb = i;
+        }
+
+        let cityCode = city[numb].address.cityCode;
+
+        console.log(city[numb].name + " - " + city[numb].address.cityCode)
+
+        // return res.status(200).send({
+        //     "name": city[numb].name,
+        //     "cityCode" : city[numb].address.cityCode,
+        // })
+
         try {
-            let idCity = req.params.idCity.toUpperCase();
             let hasil = await axios.get(
-                `https://test.api.amadeus.com/v1/reference-data/locations/hotels/by-city?cityCode=${idCity}`,
+                `https://test.api.amadeus.com/v1/reference-data/locations/hotels/by-city?cityCode=${cityCode}`,
                 {
                     headers: {
                         'Authorization': key
                     }
                 })
-            // let hasil = await axios.get(
-            //     `https://test.api.amadeus.com/v2/shopping/hotel-offers?cityCode=${idCity}`,
-            //     {
-            //         headers: {
-            //             'Authorization': key
-            //         }
-            //     })
             let data = hasil.data.data;
-            console.log(data);
+            //console.log(data);
+
+            let size = 10;
+            if(data.length<10) size = data.length;
+
+            //console.log(size)
 
             let hotel = [];
-            for(let i=0; i<10;i++) {
+            for(let i=0; i<size;i++) {
+                // let rate = await axios.get(
+                //     `https://test.api.amadeus.com/v2/e-reputation/hotel-sentiments?hotelIds=${data[i].hotelId}`,
+                //     {
+                //         headers: {
+                //             'Authorization': key
+                //         }
+                //     })
+
+                //let rating = rate.data.data;
+                //return res.status(200).send(rating);
+
                 let temp = {
                     "name" : data[i].name,
                     "hotelId" : data[i].hotelId,
-                    "countryCode" : data[i].address.countryCode
+                    "countryCode" : data[i].address.countryCode,
+                    //"rating" : rating
                 }
                 hotel.push(temp);
             }
