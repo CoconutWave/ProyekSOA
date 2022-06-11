@@ -20,7 +20,7 @@ const upload = multer({
 
 const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
 
-const key = "Bearer DUwsVtyGCZA4A3MgKB2LC8sPjA9Q";
+const key = "Bearer AAzvmLpMlGO9tHjqrGjyYUTba4f7";//aku ganti punyaku
 
 const generateUniqueApikey = (length) => {
     let apikey = "";
@@ -29,6 +29,19 @@ const generateUniqueApikey = (length) => {
     }
     console.log("Generated API: "+apikey);
     return apikey;
+}
+
+const checkUser = async (apikey) => {
+    let search_user = await executeQuery(`select * from users where apikey = "${apikey}"`);
+    if(search_user.length == 0){
+        return false;
+    }
+    search_user = search_user[0];
+    if(search_user.is_active != 1){
+        return false;
+    }else{
+        return true;
+    }
 }
 
 //register new user
@@ -76,7 +89,7 @@ router.post("/register",upload.none(), async function (req, res) {
         }while(check_api.length > 0);
 
         let insert_user = await executeQuery(`insert into users
-            values('',"${apikey}", 5, "${email}", "${fname}", "${lname}", "${password}", STR_TO_DATE("${date_of_birth}", "%d/%m/%Y"),
+            values('',"${apikey}", 5, "${email}", "${fname}", "${lname}", "${password}", STR_TO_DATE("${date_of_birth}", "%d/%m/%YYYY"),
             NOW(), NOW(), 1)`);
         if(insert_user) {
             return res.status(200).send({
@@ -143,12 +156,16 @@ router.put("/update", upload.none(), async function (req, res) {
         return res.status(401).send("Unauthorized");
     }
     else {
+        let check = await checkUser(header);
+        if(check == false){
+            return res.status(401).send({message: "Your account is deleted"});
+        }
         const user = await executeQuery(`select * 
             from users 
             where apikey = '${header}'
             and is_active = 1`);
         if(user.length<1) {
-            return res.status(401).send({
+            return res.status(404).send({
                 "message" : "User not found"
             })
         }
@@ -201,6 +218,10 @@ router.put("/updatePhoto",upload.single("IDCard"), async function (req, res) {
     if(!req.header('x-auth-token')) {
         return res.status(401).send("Unauthorized");
     }else{
+        let check = await checkUser(header);
+        if(check == false){
+            return res.status(401).send({message: "Your account is deleted"});
+        }
         const user = await executeQuery(`select * 
         from users 
         where apikey = '${header}'
@@ -229,6 +250,10 @@ router.get("/searchFlight/:airportCode", upload.none(), async function (req, res
     }
     else{
         //await executeQuery(`update users set apihit = apihit - 1 where apikey = "${header}"`);
+        let check = await checkUser(header);
+        if(check == false){
+            return res.status(401).send({message: "Your account is deleted"});
+        }
         if(req.params.airportCode) {
             //sesuai code
             let departureAirportCode = req.params.airportCode.toUpperCase();
@@ -270,6 +295,7 @@ router.get("/searchFlight/:airportCode", upload.none(), async function (req, res
                     }
                 });
             } catch (error) {
+                console.log(error);
                 return res.status(400).send({
                     message: "Internal error!"
                 });
@@ -290,6 +316,10 @@ router.get("/optionsFlight/", upload.none(), async function (req, res) {
         });
     }
     else{
+        let check = await checkUser(header);
+        if(check == false){
+            return res.status(401).send({message: "Your account is deleted"});
+        }
         const schema =
             Joi.object({
                 originLocation: Joi.string().required(),
