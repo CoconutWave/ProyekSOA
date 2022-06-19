@@ -7,6 +7,206 @@
 	},
 	"item": [
 		{
+			"name": "User Basic",
+			"item": [
+				{
+					"name": "Register",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "fname",
+									"value": "Katie",
+									"type": "text"
+								},
+								{
+									"key": "lname",
+									"value": "Hughes",
+									"type": "text"
+								},
+								{
+									"key": "email",
+									"value": "KatieHughes123@mail.com",
+									"type": "text"
+								},
+								{
+									"key": "password",
+									"value": "abcd1234",
+									"type": "text"
+								},
+								{
+									"key": "confirm_password",
+									"value": "abcd1234",
+									"type": "text"
+								},
+								{
+									"key": "date_of_birth",
+									"value": "19/10/1999",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "localhost:3000/api/users/register",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"users",
+								"register"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Login",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "email",
+									"value": "mar.see@mail.com",
+									"type": "text"
+								},
+								{
+									"key": "password",
+									"value": "nintendo",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "localhost:3000/api/users/login",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"users",
+								"login"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Profile",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "x-auth-token",
+								"value": "kJFjFArT5o",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "fname",
+									"value": "Marceline",
+									"type": "text"
+								},
+								{
+									"key": "lname",
+									"value": "Smith",
+									"type": "text"
+								},
+								{
+									"key": "password",
+									"value": "nintendo",
+									"type": "text"
+								},
+								{
+									"key": "confirm_password",
+									"value": "nintendo",
+									"type": "text"
+								},
+								{
+									"key": "date_of_birth",
+									"value": "07/10/2000",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "localhost:3000/api/users/update",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"users",
+								"update"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Photo",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "x-auth-token",
+								"value": "yDx4YM74IJ",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "IDCard",
+									"type": "file",
+									"src": "/E:/Design/651887-yakuza-kiwami-windows-apps-front-cover.jpg"
+								}
+							]
+						},
+						"url": {
+							"raw": "localhost:3000/api/users/updatePhoto",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"users",
+								"updatePhoto"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Admin Basic",
+			"item": [
+				{
+					"name": "Get Reviews",
+					"request": {
+						"method": "GET",
+						"header": []
+					},
+					"response": []
+				}
+			]
+		},
+		{
 			"name": "Test",
 			"request": {
 				"method": "GET",
@@ -26,103 +226,50 @@
 			"response": []
 		},
 		{
-			"name": "Register",
-			"request": {
-				"method": "POST",
-				"header": [],
-				"body": {
-					"mode": "formdata",
-					"formdata": [
-						{
-							"key": "fname",
-							"value": "John",
-							"type": "text"
-						},
-						{
-							"key": "lname",
-							"value": "Kazimir",
-							"type": "text"
-						},
-						{
-							"key": "email",
-							"value": "jayjay.max@mail.com",
-							"type": "text"
-						},
-						{
-							"key": "password",
-							"value": "asdfasdf",
-							"type": "text"
-						},
-						{
-							"key": "confirm_password",
-							"value": "asdfasdf",
-							"type": "text"
-						},
-						{
-							"key": "date_of_birth",
-							"value": "11/05/1996",
-							"type": "text"
-						}
-					]
-				},
-				"url": {
-					"raw": "localhost:3000/api/users/register",
-					"host": [
-						"localhost"
-					],
-					"port": "3000",
-					"path": [
-						"api",
-						"users",
-						"register"
-					]
-				}
+			"name": "Search Flight",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
 			},
-			"response": []
-		},
-		{
-			"name": "localhost:3000/api/users/login",
 			"request": {
-				"method": "POST",
-				"header": [],
-				"body": {
-					"mode": "formdata",
-					"formdata": [
-						{
-							"key": "email",
-							"value": "jayjay.max@mail.com",
-							"type": "text"
-						},
-						{
-							"key": "password",
-							"value": "asdfasdf",
-							"type": "text"
-						}
-					]
-				},
-				"url": {
-					"raw": "localhost:3000/api/users/login",
-					"host": [
-						"localhost"
-					],
-					"port": "3000",
-					"path": [
-						"api",
-						"users",
-						"login"
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "localhost:3000/api/users/update",
-			"request": {
-				"method": "PUT",
+				"method": "GET",
 				"header": [
 					{
 						"key": "x-auth-token",
-						"value": "yDx4YM74IJ",
+						"value": "kJFjFArT5o",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "formdata",
+					"formdata": []
+				},
+				"url": {
+					"raw": "localhost:3000/api/users/searchFlight/CGK",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"api",
+						"users",
+						"searchFlight",
+						"CGK"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Options Flight",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "x-auth-token",
+						"value": "kJFjFArT5o",
 						"type": "text"
 					}
 				],
@@ -130,14 +277,29 @@
 					"mode": "formdata",
 					"formdata": [
 						{
-							"key": "fname",
-							"value": "Jeremy",
+							"key": "originLocation",
+							"value": "CGK",
+							"type": "text"
+						},
+						{
+							"key": "destinationLocation",
+							"value": "SUB",
+							"type": "text"
+						},
+						{
+							"key": "departure_date",
+							"value": "2022-06-11",
+							"type": "text"
+						},
+						{
+							"key": "adults",
+							"value": "1",
 							"type": "text"
 						}
 					]
 				},
 				"url": {
-					"raw": "localhost:3000/api/users/update",
+					"raw": "localhost:3000/api/users/optionsFlight",
 					"host": [
 						"localhost"
 					],
@@ -145,43 +307,7 @@
 					"path": [
 						"api",
 						"users",
-						"update"
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "localhost:3000/api/users/updatePhoto",
-			"request": {
-				"method": "PUT",
-				"header": [
-					{
-						"key": "x-auth-token",
-						"value": "yDx4YM74IJ",
-						"type": "text"
-					}
-				],
-				"body": {
-					"mode": "formdata",
-					"formdata": [
-						{
-							"key": "IDCard",
-							"type": "file",
-							"src": "/E:/Design/651887-yakuza-kiwami-windows-apps-front-cover.jpg"
-						}
-					]
-				},
-				"url": {
-					"raw": "localhost:3000/api/users/updatePhoto",
-					"host": [
-						"localhost"
-					],
-					"port": "3000",
-					"path": [
-						"api",
-						"users",
-						"updatePhoto"
+						"optionsFlight"
 					]
 				}
 			},

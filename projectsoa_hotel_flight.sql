@@ -16,6 +16,23 @@ CREATE DATABASE /*!32312 IF NOT EXISTS*/`soaproject_hotel_flight` /*!40100 DEFAU
 
 USE `soaproject_hotel_flight`;
 
+/*Table structure for table `review` */
+
+DROP TABLE IF EXISTS `review`;
+
+CREATE TABLE `review` (
+  `hotel_id` varchar(8) DEFAULT NULL COMMENT 'id hotel amadeus',
+  `user_id` int(11) DEFAULT NULL,
+  `review_content` text DEFAULT NULL,
+  `review_score` smallint(1) DEFAULT NULL COMMENT '1-5',
+  `review_date` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp() COMMENT 'updated at'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+/*Data for the table `review` */
+
+insert  into `review`(`hotel_id`,`user_id`,`review_content`,`review_score`,`review_date`) values 
+('AZJKT134',1,'Sangat bagus interior dan servicenya',5,'2022-06-19 19:47:12');
+
 /*Table structure for table `subscription_plan` */
 
 DROP TABLE IF EXISTS `subscription_plan`;
@@ -50,9 +67,15 @@ CREATE TABLE `users` (
   `is_active` tinyint(1) NOT NULL DEFAULT 1 COMMENT '1 = active, 0 = inactive',
   PRIMARY KEY (`id`),
   UNIQUE KEY `UNIQUE_APIKEY` (`apikey`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4;
 
 /*Data for the table `users` */
+
+insert  into `users`(`id`,`apikey`,`apihit`,`email`,`fname`,`lname`,`password`,`date_of_birth`,`date_registered`,`date_updated`,`is_active`) values 
+(1,'BAs3XiTqng',5,'gareth05@mail.com','Gareth','Newman','asdfasdf','1994-08-07 00:00:00','2022-05-06 10:04:26','2022-05-06 10:04:26',1),
+(2,'yDx4YM74IJ',5,'jayjay.max@mail.com','Jeremy','Kazimir','asdfasdf','2022-05-26 16:05:41','2022-05-26 15:52:49','2022-05-26 16:05:41',1),
+(3,'kJFjFArT5o',5,'Mar.see@mail.com','Marceline','Smith','nintendo','2000-10-07 00:00:00','2022-06-11 20:40:19','2022-06-11 21:26:28',1),
+(4,'VMIHfwZqTm',5,'KatieHughes123@mail.com','Katie','Hughes','abcd1234','1999-10-19 00:00:00','2022-06-11 21:27:46','2022-06-11 21:27:46',1);
 
 /*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
 /*!40014 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS */;
