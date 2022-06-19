@@ -1,7 +1,10 @@
+const { default: axios } = require("axios");
 const express = require("express");
 const Joi = require('joi').extend(require('@joi/date'));
 const router = express.Router();
 const {executeQuery} = require("../database");
+
+const key = "Bearer iCJpEeXozfR3PLY5s3QHBgFPdmML";//aku ganti punyaku
 
 //get user
 router.get("/user", async function (req, res) {
@@ -85,6 +88,53 @@ router.delete("/user/:email", async function (req, res) {
                 "message" : "Can't delete",
             })
         }
+    }
+});
+
+router.get("/review/:email", async function (req, res) {
+    // validasi params
+    const par = req.params;
+    const schema = Joi.object({
+        email: Joi.string().email().required()
+    });
+    try {
+        await schema.validateAsync(par);
+    } catch (error) {
+        return res.status(400).send(error.toString());
+    }
+    
+    try {
+        let user = await executeQuery(`select * from users where email = "${par.email}"`);
+        console.log(`select * from users where email = "${par.email}"`);
+        if(user.length == 0){
+            return res.status(404).send({message: "User not found!"});
+        }
+        let reviews = await executeQuery(`select hotel_id, user_id, review_content, review_score, date_format(review_date, "%d/%m/%Y") as review_date from review where user_id = ${user[0].id}`);
+        let array_review = [];
+        for (let i = 0; i < reviews.length; i++) {
+            console.log(reviews[i].hotel_id)
+            let hotel = await axios.get(`https://test.api.amadeus.com/v1/reference-data/locations/hotels/by-hotels?hotelIds=${reviews[i].hotel_id}`,{
+                headers: {
+                    'Authorization': key
+                }});
+            hotel=hotel.data.data[0];
+            const eachReview = {
+                hotel: hotel.name,
+                hotel_chainCode: hotel.chainCode,
+                rating: reviews[i].review_score+"/5",
+                date_reviewed: reviews[i].review_date,
+                review_content: reviews[i].review_content
+            }
+            array_review.push(eachReview);
+        }
+        return res.status(200).send({
+            name: user[0].fname + " " + user[0].lname,
+            date_registered: user[0].date_registered,
+            reviews: array_review
+        });
+    } catch (error) {
+        console.log(error);
+        return res.status(500).send({message: "Internal error"});
     }
 });
 

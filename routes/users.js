@@ -20,7 +20,7 @@ const upload = multer({
 
 const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
 
-const key = "Bearer JXA8akVUGuka0EsX7Pn8ZEYpzUPj";//aku ganti punyaku
+const key = "Bearer iCJpEeXozfR3PLY5s3QHBgFPdmML";//aku ganti punyaku
 
 // ------------------ FUNCTION ------------------
 const generateUniqueApikey = (length) => {
@@ -52,7 +52,7 @@ const checkHotelId = async (id) => {
             headers: {
                 'Authorization': key
             }
-        })
+        });
     } catch (error) {
         throw new Error("Invalid Hotel ID");
     }
@@ -515,7 +515,7 @@ router.post("/reviewHotel", upload.none(), async function (req, res){
         hotel_id        : Joi.string().external(checkHotelId).required(), 
         review_content  : Joi.string().required(),
         review_score    : Joi.number().min(1).max(5).required(),
-    })
+    });
     try {
         await schema.validateAsync(body);
     } catch (error) {
