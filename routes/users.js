@@ -20,8 +20,9 @@ const upload = multer({
 
 const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
 
-const key = "Bearer AAzvmLpMlGO9tHjqrGjyYUTba4f7";//aku ganti punyaku
+const key = "Bearer JXA8akVUGuka0EsX7Pn8ZEYpzUPj";//aku ganti punyaku
 
+// ------------------ FUNCTION ------------------
 const generateUniqueApikey = (length) => {
     let apikey = "";
     for (let i = 0; i < length; i++) {
@@ -41,6 +42,19 @@ const checkUser = async (apikey) => {
         return false;
     }else{
         return true;
+    }
+}
+
+const checkHotelId = async (id) => {
+    try {
+        const hotel = await axios.get(
+            `https://test.api.amadeus.com/v1/reference-data/locations/hotels/by-hotels?hotelIds=${id}`,{
+            headers: {
+                'Authorization': key
+            }
+        })
+    } catch (error) {
+        throw new Error("Invalid Hotel ID");
     }
 }
 
@@ -477,6 +491,69 @@ router.get("/searchHotel/:idCity", upload.none(), async function (req, res) {
     }
 });
 
+// post & update review hotel
+router.post("/reviewHotel", upload.none(), async function (req, res){
+    let header = req.header('x-auth-token');
+    if(!header){
+        return res.status(401).send({
+            message: "Unauthorized!"
+        });
+    }
+    // check api key
+    let user = await executeQuery(`select * from users where apikey='${header}'`);
+    user = user[0]
+    if (!user){
+        return res.status(404).send({ message: "API Key Not Found" })
+    }
+    else if (user.is_active == 0){
+        return res.status(401).send({ message: "Your account is deleted" })
+    }
 
+    // validasi body
+    const body = req.body;
+    const schema = Joi.object({
+        hotel_id        : Joi.string().external(checkHotelId).required(), 
+        review_content  : Joi.string().required(),
+        review_score    : Joi.number().min(1).max(5).required(),
+    })
+    try {
+        await schema.validateAsync(body);
+    } catch (error) {
+        return res.status(400).send(error.toString());
+    }
+
+    // cek apakah user sudah pernah review hotel yang sama sebelumnya
+    // kalau sudah ada, maka review lama akan di update
+    // kalau belum ada, review baru akan ditambahkan
+    query = `select * from review where hotel_id='${body.hotel_id}' and user_id='${user.id}'`
+    let review = await executeQuery(query)
+    review = review[0]
+    let status, message
+    if (!review){
+        query = `
+            insert into review(hotel_id, user_id, review_content, review_score)
+            values('${body.hotel_id}', ${user.id}, '${body.review_content}', ${body.review_score})
+        `
+        status = 201
+        message = 'Review added!'
+    }
+    else{
+        query = `
+            update review 
+            set review_content='${body.review_content}', review_score=${body.review_score} 
+            where hotel_id='${body.hotel_id}' and user_id=${user.id}
+        `
+        status = 200
+        message = 'Review updated!'
+    }
+    let result = await executeQuery(query);
+
+    if (result){
+        return res.status(status).send({ message })
+    }
+    else{
+        return res.status(500).send('Server error occured')
+    }
+})
 
 module.exports = router;
