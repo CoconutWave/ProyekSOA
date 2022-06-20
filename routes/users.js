@@ -22,7 +22,7 @@ const upload = multer({
 
 // ------------------ VAR ------------------
 const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-const key = "Bearer iCJpEeXozfR3PLY5s3QHBgFPdmML"; //aku ganti punyaku
+const key = "Bearer vccBURVEGb0DBY0P92KZ7Rh85lRp"; //aku ganti punyaku
 
 // ------------------ FUNCTION ------------------
 const generateUniqueApikey = (length) => {
@@ -68,7 +68,8 @@ const getHotel = async (id) => {
                     'Authorization': key
                 }
             });
-        return hotel;
+            console.log(hotel.data.data[0]);
+        return hotel.data.data[0];
     } catch (error) {
         throw new Error("Invalid Hotel ID");
     }
@@ -539,11 +540,14 @@ router.post("/reviewHotel", upload.none(), async function (req, res) {
         review_content: Joi.string().required(),
         review_score: Joi.number().min(1).max(5).required(),
     });
+    let hotel
     try {
         await schema.validateAsync(body);
+        hotel = getHotel(hotel_id)
     } catch (error) {
         return res.status(400).send(error.toString());
     }
+
 
     // cek apakah user sudah pernah review hotel yang sama sebelumnya
     // kalau sudah ada, maka review lama akan di update
@@ -555,7 +559,7 @@ router.post("/reviewHotel", upload.none(), async function (req, res) {
     if (!review) {
         query = `
             insert into review(hotel_id, user_id, review_content, review_score)
-            values('${body.hotel_id}', ${user.id}, '${body.review_content}', ${body.review_score})
+            values('${body.hotel_id}','${hotel.name}' ${user.id}, '${body.review_content}', ${body.review_score})
         `
         status = 201
         message = 'Review added!'
@@ -594,12 +598,12 @@ router.get("/reviewHotel/:idHotel?", async function (req, res) {
             });
         }
         if (!req.params.idHotel) {
-            let data = await executeQuery(`select hotel_id as "Hotel ID", AVG(review_score) as "Rating"  from review group by hotel_id`);
+            let data = await executeQuery(`select hotel_name as "Hotel Name", AVG(review_score) as "Rating"  from review group by hotel_id`);
             return res.status(200).send(data)
         } else {
             let idHotel = req.params.idHotel.toUpperCase();
             try {
-                // await checkHotelId(idHotel);
+                let hotel = await getHotel(idHotel); 
                 let data = await executeQuery(`select user_id as "User ID",review_content as "Review",review_score as "Rating" from review where hotel_id = '${idHotel}'`);
                 let jum = 0
                 let tot = 0
@@ -608,13 +612,13 @@ router.get("/reviewHotel/:idHotel?", async function (req, res) {
                     jum++
                 });
                 return res.status(200).send({
-                    "Hotel ID":idHotel,
+                    "Hotel Name": hotel.name,
                     "Review Amount":jum,
                     "Average Rating":tot/jum,
                     "Reviews":data
                 })
             } catch (error) {
-                return res.status(404).send(error);
+                return res.status(404).send("Hotel not found");
             }
         }
     }

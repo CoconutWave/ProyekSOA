@@ -1,6 +1,6 @@
 /*
 SQLyog Community v13.1.9 (64 bit)
-MySQL - 10.4.22-MariaDB : Database - soaproject_hotel_flight
+MySQL - 10.4.24-MariaDB : Database - soaproject_hotel_flight
 *********************************************************************
 */
 
@@ -57,6 +57,7 @@ DROP TABLE IF EXISTS `review`;
 
 CREATE TABLE `review` (
   `hotel_id` varchar(8) DEFAULT NULL COMMENT 'id hotel amadeus',
+  `hotel_name` varchar(50) DEFAULT NULL,
   `user_id` int(11) DEFAULT NULL,
   `review_content` text DEFAULT NULL,
   `review_score` smallint(1) DEFAULT NULL COMMENT '1-5',
@@ -65,8 +66,8 @@ CREATE TABLE `review` (
 
 /*Data for the table `review` */
 
-insert  into `review`(`hotel_id`,`user_id`,`review_content`,`review_score`,`review_date`) values 
-('AZJKT134',1,'Sangat bagus interior dan servicenya',5,'2022-06-19 19:47:12');
+insert  into `review`(`hotel_id`,`hotel_name`,`user_id`,`review_content`,`review_score`,`review_date`) values 
+('AZJKT134','ASCOTT JAKARTA',1,'Sangat bagus interior dan servicenya',5,'2022-06-20 16:44:28');
 
 /*Table structure for table `subscription_plan` */
 
