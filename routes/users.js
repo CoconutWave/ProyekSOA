@@ -22,7 +22,7 @@ const upload = multer({
 
 // ------------------ VAR ------------------
 const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-const key = "Bearer vccBURVEGb0DBY0P92KZ7Rh85lRp"; //aku ganti punyaku
+const key = "Bearer ckdP0RFAQsMU2vpMivSUpRSJQzf7"; //aku ganti punyaku
 
 // ------------------ FUNCTION ------------------
 const generateUniqueApikey = (length) => {
@@ -53,6 +53,7 @@ const checkUser = async function (req, res, next) {
             message: "Your account is deleted"
         });
     } else {
+        req.header["user_id"] = search_user.id;
         return next();
     }
 }
@@ -76,7 +77,7 @@ const checkHotelId = async (id) => {
                 }
             });
     } catch (error) {
-        throw new Error("Invalid Hotel ID");
+        throw new Error(error.toString());
     }
 }
 
@@ -482,7 +483,7 @@ router.get("/searchHotel/:idCity", upload.none(), async function (req, res) {
 
 // post & update review hotel
 router.post("/reviewHotel", [checkUser,upload.none()], async function (req, res) {
-
+    let user_id = req.header.user_id
     // validasi body
     const body = req.body;
     const schema = Joi.object({
@@ -493,7 +494,7 @@ router.post("/reviewHotel", [checkUser,upload.none()], async function (req, res)
     let hotel
     try {
         await schema.validateAsync(body);
-        hotel = getHotel(hotel_id)
+        hotel = await getHotel(body.hotel_id)
     } catch (error) {
         return res.status(400).send(error.toString());
     }
@@ -502,14 +503,14 @@ router.post("/reviewHotel", [checkUser,upload.none()], async function (req, res)
     // cek apakah user sudah pernah review hotel yang sama sebelumnya
     // kalau sudah ada, maka review lama akan di update
     // kalau belum ada, review baru akan ditambahkan
-    let query = `select * from review where hotel_id='${body.hotel_id}' and user_id='${user.id}'`
+    let query = `select * from review where hotel_id='${body.hotel_id}' and user_id='${user_id}'`
     let review = await executeQuery(query)
     review = review[0]
     let status, message
     if (!review) {
         query = `
-            insert into review(hotel_id, user_id, review_content, review_score)
-            values('${body.hotel_id}','${hotel.name}' ${user.id}, '${body.review_content}', ${body.review_score})
+            insert into review(hotel_id, hotel_name, user_id, review_content, review_score)
+            values('${body.hotel_id}','${hotel.name}', ${user_id}, '${body.review_content}', ${body.review_score})
         `
         status = 201
         message = 'Review added!'
@@ -517,7 +518,7 @@ router.post("/reviewHotel", [checkUser,upload.none()], async function (req, res)
         query = `
             update review 
             set review_content='${body.review_content}', review_score=${body.review_score} 
-            where hotel_id='${body.hotel_id}' and user_id=${user.id}
+            where hotel_id='${body.hotel_id}' and user_id=${user_id}
         `
         status = 200
         message = 'Review updated!'
@@ -531,6 +532,39 @@ router.post("/reviewHotel", [checkUser,upload.none()], async function (req, res)
     } else {
         return res.status(500).send('Server error occured')
     }
+})
+
+// option hotel [Donen't]
+router.get("/optionsHotel", [checkUser,upload.none()], async function (req, res){
+    const body = req.body;
+    const schema = Joi.object({
+        hotel_id: Joi.string().external(checkHotelId).required(),
+        adults: Joi.number().min(1).max(9).required(),
+        checkIn_date: Joi.date().format('YYYY-MM-DD').required(),
+        room_quantity: Joi.number().min(1).max(9).required(),
+    });
+    try {
+        await schema.validateAsync(body);
+    } catch (error) {
+        return res.status(400).send(error.toString());
+    }
+    
+    try{
+        var hotel = await axios.get(
+            `https://test.api.amadeus.com/v3/shopping/hotel-offers?hotelIds=${body.hotel_id}&adults=${body.adults}&checkInDate=${body.checkIn_date}&roomQuantity=${body.room_quantity}`, {
+                headers: {
+                    'Authorization': key
+                }
+            });
+        hotel = hotel.data.data[0]
+        console.log(hotel.hotel.name)
+        console.log(hotel.offers[0].room)
+        console.log(hotel.offers[0].price)
+    }
+    catch(error){
+        return res.status(400).send(error.toString());
+    }
+    return res.send("done")
 })
 
 //cari review hotel 
