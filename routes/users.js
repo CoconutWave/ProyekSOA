@@ -1,7 +1,9 @@
 const express = require("express");
 const Joi = require('joi').extend(require('@joi/date'));
 const router = express.Router();
-const {executeQuery} = require("../database");
+const {
+    executeQuery
+} = require("../database");
 const multer = require("multer");
 const fs = require("fs");
 const axios = require("axios");
@@ -20,7 +22,7 @@ const upload = multer({
 
 const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
 
-const key = "Bearer iCJpEeXozfR3PLY5s3QHBgFPdmML";//aku ganti punyaku
+const key = "Bearer iCJpEeXozfR3PLY5s3QHBgFPdmML"; //aku ganti punyaku
 
 // ------------------ FUNCTION ------------------
 const generateUniqueApikey = (length) => {
@@ -28,19 +30,19 @@ const generateUniqueApikey = (length) => {
     for (let i = 0; i < length; i++) {
         apikey += characters.charAt(Math.floor(Math.random() * characters.length));
     }
-    console.log("Generated API: "+apikey);
+    console.log("Generated API: " + apikey);
     return apikey;
 }
 
 const checkUser = async (apikey) => {
     let search_user = await executeQuery(`select * from users where apikey = "${apikey}"`);
-    if(search_user.length == 0){
+    if (search_user.length == 0) {
         return false;
     }
     search_user = search_user[0];
-    if(search_user.is_active != 1){
+    if (search_user.is_active != 1) {
         return false;
-    }else{
+    } else {
         return true;
     }
 }
@@ -48,24 +50,40 @@ const checkUser = async (apikey) => {
 const checkHotelId = async (id) => {
     try {
         const hotel = await axios.get(
-            `https://test.api.amadeus.com/v1/reference-data/locations/hotels/by-hotels?hotelIds=${id}`,{
-            headers: {
-                'Authorization': key
-            }
-        });
+            `https://test.api.amadeus.com/v1/reference-data/locations/hotels/by-hotels?hotelIds=${id}`, {
+                headers: {
+                    'Authorization': key
+                }
+            });
+    } catch (error) {
+        throw new Error("Invalid Hotel ID");
+    }
+}
+
+const getHotel = async (id) => {
+    try {
+        const hotel = await axios.get(
+            `https://test.api.amadeus.com/v1/reference-data/locations/hotels/by-hotels?hotelIds=${id}`, {
+                headers: {
+                    'Authorization': key
+                }
+            });
+        return hotel;
     } catch (error) {
         throw new Error("Invalid Hotel ID");
     }
 }
 
 //register new user
-router.post("/register",upload.none(), async function (req, res) {
+router.post("/register", upload.none(), async function (req, res) {
     console.log(req.body);
     const schema =
         Joi.object({
             fname: Joi.string().required(),
             lname: Joi.string().required(),
-            email: Joi.string().email({ minDomainSegments:2 }).required(),
+            email: Joi.string().email({
+                minDomainSegments: 2
+            }).required(),
             password: Joi.string().required(),
             confirm_password: Joi.string().required(),
             date_of_birth: Joi.date().format('DD/MM/YYYY').required(),
@@ -77,10 +95,17 @@ router.post("/register",upload.none(), async function (req, res) {
         return res.status(403).send(error.toString());
     }
 
-    const {fname, lname, email, password, confirm_password, date_of_birth} = req.body;
+    const {
+        fname,
+        lname,
+        email,
+        password,
+        confirm_password,
+        date_of_birth
+    } = req.body;
     let apikey;
 
-    if(password !== confirm_password) {
+    if (password !== confirm_password) {
         return res.status(200).send({
             message: "Password don't match!"
         });
@@ -89,28 +114,28 @@ router.post("/register",upload.none(), async function (req, res) {
     const user = await executeQuery(`select *
             from users where email = '${email}'
             and is_active = 1`);
-    if(user.length>0) {
+    if (user.length > 0) {
         return res.status(401).send({
-            "message" : "Email has been used"
+            "message": "Email has been used"
         })
     }
-    
+
     try {
         let check_api;
-        do{
+        do {
             apikey = generateUniqueApikey(10);
             check_api = await executeQuery(`select * from users where apikey = "${apikey}"`);
-        }while(check_api.length > 0);
+        } while (check_api.length > 0);
 
         let insert_user = await executeQuery(`insert into users
             values('',"${apikey}", 5, "${email}", "${fname}", "${lname}", "${password}", STR_TO_DATE("${date_of_birth}", "%d/%m/%YYYY"),
             NOW(), NOW(), 1)`);
-        if(insert_user) {
+        if (insert_user) {
             return res.status(200).send({
                 message: "Registered successfully!",
                 name: fname + " " + lname,
                 email: email,
-                date_of_birth : date_of_birth,
+                date_of_birth: date_of_birth,
                 API_key: apikey
             });
         }
@@ -121,10 +146,12 @@ router.post("/register",upload.none(), async function (req, res) {
 });
 
 //generate key??
-router.post("/login",upload.none(), async function (req, res) {
+router.post("/login", upload.none(), async function (req, res) {
     const schema =
         Joi.object({
-            email: Joi.string().email({ minDomainSegments:2 }).required(),
+            email: Joi.string().email({
+                minDomainSegments: 2
+            }).required(),
             password: Joi.string().required(),
         })
 
@@ -134,19 +161,22 @@ router.post("/login",upload.none(), async function (req, res) {
         return res.status(403).send(error.toString());
     }
 
-    const {email, password} = req.body;
+    const {
+        email,
+        password
+    } = req.body;
     try {
         const users = await executeQuery(`select * from users where email = '${email}'`);
-        if(users.length<1) {
+        if (users.length < 1) {
             return res.status(404).send({
-                "status" : 404,
-                "message" : "User not found"
+                "status": 404,
+                "message": "User not found"
             })
         }
-        if(users[0].password !== password){
+        if (users[0].password !== password) {
             return res.status(400).send({
-                "status" : 400,
-                "message" : "Password tidak benar"
+                "status": 400,
+                "message": "Password tidak benar"
             })
         }
         return res.status(200).send({
@@ -166,21 +196,22 @@ router.post("/login",upload.none(), async function (req, res) {
 router.put("/update", upload.none(), async function (req, res) {
     let header = req.header('x-auth-token');
 
-    if(!req.header('x-auth-token')) {
+    if (!req.header('x-auth-token')) {
         return res.status(401).send("Unauthorized");
-    }
-    else {
+    } else {
         let check = await checkUser(header);
-        if(check == false){
-            return res.status(401).send({message: "Your account is deleted"});
+        if (check == false) {
+            return res.status(401).send({
+                message: "Your account is deleted"
+            });
         }
         const user = await executeQuery(`select * 
             from users 
             where apikey = '${header}'
             and is_active = 1`);
-        if(user.length<1) {
+        if (user.length < 1) {
             return res.status(404).send({
-                "message" : "User not found"
+                "message": "User not found"
             })
         }
 
@@ -189,18 +220,18 @@ router.put("/update", upload.none(), async function (req, res) {
         let password = user[0].password;
         let date_of_birth = user[0].date_of_birth;
 
-        if(req.body.fname) fname = req.body.fname;
-        if(req.body.lname) lname = req.body.lname;
-        if(req.body.password) {
+        if (req.body.fname) fname = req.body.fname;
+        if (req.body.lname) lname = req.body.lname;
+        if (req.body.password) {
             password = req.body.password;
             let confirm_password = req.body.confirm_password;
-            if(password !== confirm_password) {
+            if (password !== confirm_password) {
                 return res.status(400).send({
                     message: "Password don't match!"
                 });
             }
         }
-        if(req.body.date_of_birth) date_of_birth = req.body.date_of_birth;
+        if (req.body.date_of_birth) date_of_birth = req.body.date_of_birth;
 
         const update = await executeQuery(`update users 
             set date_updated = NOW(),
@@ -211,13 +242,13 @@ router.put("/update", upload.none(), async function (req, res) {
             where email = '${user[0].email}' 
             and is_active = 1`);
 
-        if(update) {
+        if (update) {
             return res.status(400).send({
-                "message" : "Successfully updated",
+                "message": "Successfully updated",
             })
         } else {
             return res.status(400).send({
-                "message" : "Can't update",
+                "message": "Can't update",
             })
         }
 
@@ -225,26 +256,28 @@ router.put("/update", upload.none(), async function (req, res) {
 });
 
 //update photo-user
-router.put("/updatePhoto",upload.single("IDCard"), async function (req, res) {
+router.put("/updatePhoto", upload.single("IDCard"), async function (req, res) {
     let header = req.header('x-auth-token');
     req.body.ktpapikey = header;
 
-    if(!req.header('x-auth-token')) {
+    if (!req.header('x-auth-token')) {
         return res.status(401).send("Unauthorized");
-    }else{
+    } else {
         let check = await checkUser(header);
-        if(check == false){
-            return res.status(401).send({message: "Your account is deleted"});
+        if (check == false) {
+            return res.status(401).send({
+                message: "Your account is deleted"
+            });
         }
         const user = await executeQuery(`select * 
         from users 
         where apikey = '${header}'
         and is_active = 1`);
-        if(user.length<1) {
+        if (user.length < 1) {
             console.log("USER_NOT_FOUND")
             fs.unlinkSync(`../uploads/${header}`);
             return res.status(404).send({
-                "message" : "User not found"
+                "message": "User not found"
             });
         }
 
@@ -257,18 +290,19 @@ router.put("/updatePhoto",upload.single("IDCard"), async function (req, res) {
 router.get("/searchFlight/:airportCode", upload.none(), async function (req, res) {
     //Departure Airport code following IATA standard
     let header = req.header('x-auth-token');
-    if(!req.header('x-auth-token')){
+    if (!req.header('x-auth-token')) {
         return res.status(400).send({
             message: "Unauthorized!"
         });
-    }
-    else{
+    } else {
         //await executeQuery(`update users set apihit = apihit - 1 where apikey = "${header}"`);
         let check = await checkUser(header);
-        if(check == false){
-            return res.status(401).send({message: "Your account is deleted"});
+        if (check == false) {
+            return res.status(401).send({
+                message: "Your account is deleted"
+            });
         }
-        if(req.params.airportCode) {
+        if (req.params.airportCode) {
             //sesuai code
             let departureAirportCode = req.params.airportCode.toUpperCase();
             // try {
@@ -284,8 +318,7 @@ router.get("/searchFlight/:airportCode", upload.none(), async function (req, res
 
             try {
                 let hasil = await axios.get(
-                    `https://test.api.amadeus.com/v1/airport/direct-destinations?departureAirportCode=${departureAirportCode}`,
-                    {
+                    `https://test.api.amadeus.com/v1/airport/direct-destinations?departureAirportCode=${departureAirportCode}`, {
                         headers: {
                             'Authorization': key
                         }
@@ -294,18 +327,18 @@ router.get("/searchFlight/:airportCode", upload.none(), async function (req, res
                 console.log(data);
 
                 let departure_offer = [];
-                for(let i=0; i<data.length;i++) {
+                for (let i = 0; i < data.length; i++) {
                     let temp = {
-                        "destination" : data[i].name,
-                        "iataCode" : data[i].iataCode,
+                        "destination": data[i].name,
+                        "iataCode": data[i].iataCode,
                     }
                     departure_offer.push(temp);
                 }
 
                 return res.status(200).send({
                     body: {
-                        "count" : data.length,
-                        "departure_offer" : departure_offer
+                        "count": data.length,
+                        "departure_offer": departure_offer
                     }
                 });
             } catch (error) {
@@ -316,7 +349,9 @@ router.get("/searchFlight/:airportCode", upload.none(), async function (req, res
             }
 
         } else {
-            return res.status(400).send({message:"Empty field!"});
+            return res.status(400).send({
+                message: "Empty field!"
+            });
         }
     }
 });
@@ -324,15 +359,16 @@ router.get("/searchFlight/:airportCode", upload.none(), async function (req, res
 //flight options
 router.get("/optionsFlight/", upload.none(), async function (req, res) {
     let header = req.header('x-auth-token');
-    if(!req.header('x-auth-token')){
+    if (!req.header('x-auth-token')) {
         return res.status(400).send({
             message: "Unauthorized!"
         });
-    }
-    else{
+    } else {
         let check = await checkUser(header);
-        if(check == false){
-            return res.status(401).send({message: "Your account is deleted"});
+        if (check == false) {
+            return res.status(401).send({
+                message: "Your account is deleted"
+            });
         }
         const schema =
             Joi.object({
@@ -370,8 +406,7 @@ router.get("/optionsFlight/", upload.none(), async function (req, res) {
             // if(req.body.max) max = req.body.max;
 
             let hasil = await axios.get(
-                `https://test.api.amadeus.com/v2/shopping/flight-offers?originLocationCode=${origin}&destinationLocationCode=${dest}&departureDate=${departure_date}&adults=${adults}`,
-                {
+                `https://test.api.amadeus.com/v2/shopping/flight-offers?originLocationCode=${origin}&destinationLocationCode=${dest}&departureDate=${departure_date}&adults=${adults}`, {
                     headers: {
                         'Authorization': key
                     }
@@ -380,23 +415,23 @@ router.get("/optionsFlight/", upload.none(), async function (req, res) {
             console.log(data);
 
             let flight_offer = [];
-            for(let i=0; i<data.length;i++) {
+            for (let i = 0; i < data.length; i++) {
                 let temp = {
-                    "source" : data[i].source,
-                    "lastTicketingDate" : data[i].lastTicketingDate,
-                    "numberOfBookableSeats" : data[i].numberOfBookableSeats,
-                    "itineraries" : data[i].itineraries,
-                    "price" : data[i].price.currency + " " + data[i].price.total,
-                    "validatingAirlineCodes" : data[i].validatingAirlineCodes,
-                    "travelerPricings" : data[i].travelerPricings
+                    "source": data[i].source,
+                    "lastTicketingDate": data[i].lastTicketingDate,
+                    "numberOfBookableSeats": data[i].numberOfBookableSeats,
+                    "itineraries": data[i].itineraries,
+                    "price": data[i].price.currency + " " + data[i].price.total,
+                    "validatingAirlineCodes": data[i].validatingAirlineCodes,
+                    "travelerPricings": data[i].travelerPricings
                 }
                 flight_offer.push(temp);
             }
 
             return res.status(200).send({
                 body: {
-                    "count" : data.length,
-                    "flight_offer" : flight_offer
+                    "count": data.length,
+                    "flight_offer": flight_offer
                 }
             });
         } catch (error) {
@@ -410,15 +445,14 @@ router.get("/optionsFlight/", upload.none(), async function (req, res) {
 //search hotel (masukin nama kotanya)
 router.get("/searchHotel/:idCity", upload.none(), async function (req, res) {
     let header = req.header('x-auth-token');
-    if(!req.header('x-auth-token')){
+    if (!req.header('x-auth-token')) {
         return res.status(400).send({
             message: "Unauthorized!"
         });
-    }else{
+    } else {
         let idCity = req.params.idCity.toUpperCase();
         let cityName = await axios.get(
-            `https://test.api.amadeus.com/v1/reference-data/locations?subType=CITY&keyword=${idCity}`,
-            {
+            `https://test.api.amadeus.com/v1/reference-data/locations?subType=CITY&keyword=${idCity}`, {
                 headers: {
                     'Authorization': key
                 }
@@ -426,8 +460,8 @@ router.get("/searchHotel/:idCity", upload.none(), async function (req, res) {
         let city = cityName.data.data;
 
         let numb = -1;
-        for(let i=0; i<city.length;i++) {
-            if(city[i].name.includes(idCity)) numb = i;
+        for (let i = 0; i < city.length; i++) {
+            if (city[i].name.includes(idCity)) numb = i;
         }
 
         let cityCode = city[numb].address.cityCode;
@@ -441,8 +475,7 @@ router.get("/searchHotel/:idCity", upload.none(), async function (req, res) {
 
         try {
             let hasil = await axios.get(
-                `https://test.api.amadeus.com/v1/reference-data/locations/hotels/by-city?cityCode=${cityCode}`,
-                {
+                `https://test.api.amadeus.com/v1/reference-data/locations/hotels/by-city?cityCode=${cityCode}`, {
                     headers: {
                         'Authorization': key
                     }
@@ -451,12 +484,12 @@ router.get("/searchHotel/:idCity", upload.none(), async function (req, res) {
             //console.log(data);
 
             let size = 10;
-            if(data.length<10) size = data.length;
+            if (data.length < 10) size = data.length;
 
             //console.log(size)
 
             let hotel = [];
-            for(let i=0; i<size;i++) {
+            for (let i = 0; i < size; i++) {
                 // let rate = await axios.get(
                 //     `https://test.api.amadeus.com/v2/e-reputation/hotel-sentiments?hotelIds=${data[i].hotelId}`,
                 //     {
@@ -469,9 +502,9 @@ router.get("/searchHotel/:idCity", upload.none(), async function (req, res) {
                 //return res.status(200).send(rating);
 
                 let temp = {
-                    "name" : data[i].name,
-                    "hotelId" : data[i].hotelId,
-                    "countryCode" : data[i].address.countryCode,
+                    "name": data[i].name,
+                    "hotelId": data[i].hotelId,
+                    "countryCode": data[i].address.countryCode,
                     //"rating" : rating
                 }
                 hotel.push(temp);
@@ -479,8 +512,8 @@ router.get("/searchHotel/:idCity", upload.none(), async function (req, res) {
 
             return res.status(200).send({
                 body: {
-                    "count" : data.length,
-                    "hotel" : hotel
+                    "count": data.length,
+                    "hotel": hotel
                 }
             });
         } catch (error) {
@@ -492,9 +525,9 @@ router.get("/searchHotel/:idCity", upload.none(), async function (req, res) {
 });
 
 // post & update review hotel
-router.post("/reviewHotel", upload.none(), async function (req, res){
+router.post("/reviewHotel", upload.none(), async function (req, res) {
     let header = req.header('x-auth-token');
-    if(!header){
+    if (!header) {
         return res.status(401).send({
             message: "Unauthorized!"
         });
@@ -502,19 +535,22 @@ router.post("/reviewHotel", upload.none(), async function (req, res){
     // check api key
     let user = await executeQuery(`select * from users where apikey='${header}'`);
     user = user[0]
-    if (!user){
-        return res.status(404).send({ message: "API Key Not Found" })
-    }
-    else if (user.is_active == 0){
-        return res.status(401).send({ message: "Your account is deleted" })
+    if (!user) {
+        return res.status(404).send({
+            message: "API Key Not Found"
+        })
+    } else if (user.is_active == 0) {
+        return res.status(401).send({
+            message: "Your account is deleted"
+        })
     }
 
     // validasi body
     const body = req.body;
     const schema = Joi.object({
-        hotel_id        : Joi.string().external(checkHotelId).required(), 
-        review_content  : Joi.string().required(),
-        review_score    : Joi.number().min(1).max(5).required(),
+        hotel_id: Joi.string().external(checkHotelId).required(),
+        review_content: Joi.string().required(),
+        review_score: Joi.number().min(1).max(5).required(),
     });
     try {
         await schema.validateAsync(body);
@@ -529,15 +565,14 @@ router.post("/reviewHotel", upload.none(), async function (req, res){
     let review = await executeQuery(query)
     review = review[0]
     let status, message
-    if (!review){
+    if (!review) {
         query = `
             insert into review(hotel_id, user_id, review_content, review_score)
             values('${body.hotel_id}', ${user.id}, '${body.review_content}', ${body.review_score})
         `
         status = 201
         message = 'Review added!'
-    }
-    else{
+    } else {
         query = `
             update review 
             set review_content='${body.review_content}', review_score=${body.review_score} 
@@ -548,11 +583,54 @@ router.post("/reviewHotel", upload.none(), async function (req, res){
     }
     let result = await executeQuery(query);
 
-    if (result){
-        return res.status(status).send({ message })
-    }
-    else{
+    if (result) {
+        return res.status(status).send({
+            message
+        })
+    } else {
         return res.status(500).send('Server error occured')
+    }
+})
+
+//cari review hotel 
+router.get("/reviewHotel/:idHotel?", async function (req, res) {
+    let header = req.header('x-auth-token');
+    if (!req.header('x-auth-token')) {
+        return res.status(400).send({
+            message: "Unauthorized!"
+        });
+    } else {
+        let check = await checkUser(header);
+        if (check == false) {
+            return res.status(401).send({
+                message: "Your account is deleted"
+            });
+        }
+        if (!req.params.idHotel) {
+            let data = await executeQuery(`select hotel_id as "Hotel ID", AVG(review_score) as "Rating"  from review group by hotel_id`);
+            return res.status(200).send(data)
+        } else {
+            idHotel = req.params.idHotel.toUpperCase();
+            try {
+                // await checkHotelId(idHotel);
+                let data = await executeQuery(`select user_id as "User ID",review_content as "Review",review_score as "Rating" from review where hotel_id = '${idHotel}'`);
+                let jum = 0
+                let tot = 0
+                data.forEach(ah => {
+                    tot += ah.Rating
+                    jum++
+                });
+                return res.status(200).send({
+                    "Hotel ID":idHotel,
+                    "Review Amount":jum,
+                    "Average Rating":tot/jum,
+                    "Reviews":data
+                })
+            } catch (error) {
+                return res.status(404).send(error);
+            }
+        }
+
     }
 })
 
