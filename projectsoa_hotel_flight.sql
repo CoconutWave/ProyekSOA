@@ -1,6 +1,6 @@
 /*
-SQLyog Community v13.1.7 (64 bit)
-MySQL - 10.4.20-MariaDB : Database - soaproject_hotel_flight
+SQLyog Community v13.1.9 (64 bit)
+MySQL - 10.4.22-MariaDB : Database - soaproject_hotel_flight
 *********************************************************************
 */
 
@@ -15,6 +15,41 @@ MySQL - 10.4.20-MariaDB : Database - soaproject_hotel_flight
 CREATE DATABASE /*!32312 IF NOT EXISTS*/`soaproject_hotel_flight` /*!40100 DEFAULT CHARACTER SET utf8mb4 */;
 
 USE `soaproject_hotel_flight`;
+
+/*Table structure for table `access_log` */
+
+DROP TABLE IF EXISTS `access_log`;
+
+CREATE TABLE `access_log` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `
+client_id` varchar(50) NOT NULL,
+  `access_time` datetime NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+/*Data for the table `access_log` */
+
+/*Table structure for table `developer_account` */
+
+DROP TABLE IF EXISTS `developer_account`;
+
+CREATE TABLE `developer_account` (
+  `client_id` varchar(50) NOT NULL,
+  `
+client_secret` varchar(40) NOT NULL,
+  `
+developer_name` varchar(50) NOT NULL,
+  PRIMARY KEY (`client_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+/*Data for the table `developer_account` */
+
+insert  into `developer_account`(`client_id`,`
+client_secret`,`
+developer_name`) values 
+('e7UpVoVt99','ma3y05ca-8ayh-qg1p-o2hb-iuz1hs1cxuyb','undefined'),
+('fbHNOU7q5v','t87w1ihi-sd8p-g0v4-ascc-qlx31lxx2628','dev1');
 
 /*Table structure for table `review` */
 

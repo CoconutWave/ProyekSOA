@@ -20,8 +20,8 @@ const upload = multer({
     storage: storage
 });
 
+// ------------------ VAR ------------------
 const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-
 const key = "Bearer iCJpEeXozfR3PLY5s3QHBgFPdmML"; //aku ganti punyaku
 
 // ------------------ FUNCTION ------------------
@@ -36,11 +36,11 @@ const generateUniqueApikey = (length) => {
 
 const checkUser = async (apikey) => {
     let search_user = await executeQuery(`select * from users where apikey = "${apikey}"`);
-    if (search_user.length == 0) {
+    if (search_user.length === 0) {
         return false;
     }
     search_user = search_user[0];
-    if (search_user.is_active != 1) {
+    if (search_user.is_active !== 1) {
         return false;
     } else {
         return true;
@@ -74,7 +74,7 @@ const getHotel = async (id) => {
     }
 }
 
-//register new user
+//register new user [DONE]
 router.post("/register", upload.none(), async function (req, res) {
     console.log(req.body);
     const schema =
@@ -145,7 +145,7 @@ router.post("/register", upload.none(), async function (req, res) {
     }
 });
 
-//generate key??
+//generate key [DONE]
 router.post("/login", upload.none(), async function (req, res) {
     const schema =
         Joi.object({
@@ -181,7 +181,6 @@ router.post("/login", upload.none(), async function (req, res) {
         }
         return res.status(200).send({
             message: "Berhasil login!",
-            token: "abcd",
             api_key: users[0].apikey
         })
 
@@ -192,7 +191,7 @@ router.post("/login", upload.none(), async function (req, res) {
     }
 });
 
-//update user
+//update user [DONE]
 router.put("/update", upload.none(), async function (req, res) {
     let header = req.header('x-auth-token');
 
@@ -200,20 +199,15 @@ router.put("/update", upload.none(), async function (req, res) {
         return res.status(401).send("Unauthorized");
     } else {
         let check = await checkUser(header);
-        if (check == false) {
+        if (check === false) {
             return res.status(401).send({
-                message: "Your account is deleted"
+                message: "User not found"
             });
         }
         const user = await executeQuery(`select * 
             from users 
             where apikey = '${header}'
             and is_active = 1`);
-        if (user.length < 1) {
-            return res.status(404).send({
-                "message": "User not found"
-            })
-        }
 
         let fname = user[0].fname;
         let lname = user[0].lname;
@@ -255,7 +249,7 @@ router.put("/update", upload.none(), async function (req, res) {
     }
 });
 
-//update photo-user
+//update photo-user [BELUM]
 router.put("/updatePhoto", upload.single("IDCard"), async function (req, res) {
     let header = req.header('x-auth-token');
     req.body.ktpapikey = header;
@@ -264,7 +258,7 @@ router.put("/updatePhoto", upload.single("IDCard"), async function (req, res) {
         return res.status(401).send("Unauthorized");
     } else {
         let check = await checkUser(header);
-        if (check == false) {
+        if (check === false) {
             return res.status(401).send({
                 message: "Your account is deleted"
             });
@@ -273,20 +267,15 @@ router.put("/updatePhoto", upload.single("IDCard"), async function (req, res) {
         from users 
         where apikey = '${header}'
         and is_active = 1`);
-        if (user.length < 1) {
-            console.log("USER_NOT_FOUND")
-            fs.unlinkSync(`../uploads/${header}`);
-            return res.status(404).send({
-                "message": "User not found"
-            });
-        }
+
+
 
 
     }
 
 });
 
-//search flight
+//search flight [DONE]
 router.get("/searchFlight/:airportCode", upload.none(), async function (req, res) {
     //Departure Airport code following IATA standard
     let header = req.header('x-auth-token');
@@ -295,27 +284,21 @@ router.get("/searchFlight/:airportCode", upload.none(), async function (req, res
             message: "Unauthorized!"
         });
     } else {
-        //await executeQuery(`update users set apihit = apihit - 1 where apikey = "${header}"`);
         let check = await checkUser(header);
-        if (check == false) {
+        if (check === false) {
             return res.status(401).send({
                 message: "Your account is deleted"
+            });
+        }
+        let update = await executeQuery(`update users set apihit = apihit - 1 where apikey = "${header}"`);
+        if(!update)  {
+            return res.status(401).send({
+                message: "Apihit tidak mencukupi"
             });
         }
         if (req.params.airportCode) {
             //sesuai code
             let departureAirportCode = req.params.airportCode.toUpperCase();
-            // try {
-            //     await axios.get(`​/airport​/direct-destinations?departureAirportCode=${airportCode}`);
-            //     return res.status(200).send({
-            //         message: "Search success!"
-            //     });
-            // } catch (error) {
-            //     return res.status(400).send({
-            //         message: "Internal error!"
-            //     });
-            // }
-
             try {
                 let hasil = await axios.get(
                     `https://test.api.amadeus.com/v1/airport/direct-destinations?departureAirportCode=${departureAirportCode}`, {
@@ -356,7 +339,7 @@ router.get("/searchFlight/:airportCode", upload.none(), async function (req, res
     }
 });
 
-//flight options
+//flight options [PERIKSA]
 router.get("/optionsFlight/", upload.none(), async function (req, res) {
     let header = req.header('x-auth-token');
     if (!req.header('x-auth-token')) {
@@ -365,7 +348,7 @@ router.get("/optionsFlight/", upload.none(), async function (req, res) {
         });
     } else {
         let check = await checkUser(header);
-        if (check == false) {
+        if (check === false) {
             return res.status(401).send({
                 message: "Your account is deleted"
             });
@@ -386,24 +369,17 @@ router.get("/optionsFlight/", upload.none(), async function (req, res) {
 
         console.log(req.body);
         try {
-            //await executeQuery(`update users set apihit = apihit - 1 where apikey = "${header}"`);
+            let update = await executeQuery(`update users set apihit = apihit - 1 where apikey = "${header}"`);
+            if(!update)  {
+                return res.status(401).send({
+                    message: "Apihit tidak mencukupi"
+                });
+            }
 
             let origin = req.body.originLocation.toUpperCase();
             let dest = req.body.destinationLocation.toUpperCase();
             let departure_date = req.body.departure_date;
             let adults = Number(req.body.adults);
-
-            // let returnDate,children,infants,travelClass,includedAirlineCodes,excludedAirlineCodes,nonStop,currencyCode,maxPrice,max;
-            // if(req.body.returnDate) returnDate = req.body.returnDate;
-            // if(req.body.children) children = req.body.children;
-            // if(req.body.infants) infants = req.body.infants;
-            // if(req.body.travelClass) travelClass = req.body.travelClass;
-            // if(req.body.includedAirlineCodes) includedAirlineCodes = req.body.includedAirlineCodes;
-            // if(req.body.excludedAirlineCodes) excludedAirlineCodes = req.body.excludedAirlineCodes;
-            // if(req.body.nonStop) nonStop = req.body.nonStop;
-            // if(req.body.currencyCode) currencyCode = req.body.currencyCode;
-            // if(req.body.maxPrice) maxPrice = req.body.maxPrice;
-            // if(req.body.max) max = req.body.max;
 
             let hasil = await axios.get(
                 `https://test.api.amadeus.com/v2/shopping/flight-offers?originLocationCode=${origin}&destinationLocationCode=${dest}&departureDate=${departure_date}&adults=${adults}`, {
@@ -442,7 +418,7 @@ router.get("/optionsFlight/", upload.none(), async function (req, res) {
     }
 });
 
-//search hotel (masukin nama kotanya)
+//search hotel (masukin nama kotanya) [BELUM || PERIKSA]
 router.get("/searchHotel/:idCity", upload.none(), async function (req, res) {
     let header = req.header('x-auth-token');
     if (!req.header('x-auth-token')) {
@@ -450,6 +426,13 @@ router.get("/searchHotel/:idCity", upload.none(), async function (req, res) {
             message: "Unauthorized!"
         });
     } else {
+        let update = await executeQuery(`update users set apihit = apihit - 1 where apikey = "${header}"`);
+        if(!update)  {
+            return res.status(401).send({
+                message: "Apihit tidak mencukupi"
+            });
+        }
+
         let idCity = req.params.idCity.toUpperCase();
         let cityName = await axios.get(
             `https://test.api.amadeus.com/v1/reference-data/locations?subType=CITY&keyword=${idCity}`, {
@@ -501,11 +484,15 @@ router.get("/searchHotel/:idCity", upload.none(), async function (req, res) {
                 //let rating = rate.data.data;
                 //return res.status(200).send(rating);
 
+                let rate = 5;
+                let review = await executeQuery(`select AVG(review_score) as rate from review where hotel_id = '${data[i].hotelId}'`);
+                if(review.length > 0) rate = review[0].rate;
+
                 let temp = {
                     "name": data[i].name,
                     "hotelId": data[i].hotelId,
                     "countryCode": data[i].address.countryCode,
-                    //"rating" : rating
+                    "rating" : rate
                 }
                 hotel.push(temp);
             }
@@ -539,7 +526,7 @@ router.post("/reviewHotel", upload.none(), async function (req, res) {
         return res.status(404).send({
             message: "API Key Not Found"
         })
-    } else if (user.is_active == 0) {
+    } else if (user.is_active === 0) {
         return res.status(401).send({
             message: "Your account is deleted"
         })
@@ -561,7 +548,7 @@ router.post("/reviewHotel", upload.none(), async function (req, res) {
     // cek apakah user sudah pernah review hotel yang sama sebelumnya
     // kalau sudah ada, maka review lama akan di update
     // kalau belum ada, review baru akan ditambahkan
-    query = `select * from review where hotel_id='${body.hotel_id}' and user_id='${user.id}'`
+    let query = `select * from review where hotel_id='${body.hotel_id}' and user_id='${user.id}'`
     let review = await executeQuery(query)
     review = review[0]
     let status, message
@@ -601,7 +588,7 @@ router.get("/reviewHotel/:idHotel?", async function (req, res) {
         });
     } else {
         let check = await checkUser(header);
-        if (check == false) {
+        if (check === false) {
             return res.status(401).send({
                 message: "Your account is deleted"
             });
@@ -610,7 +597,7 @@ router.get("/reviewHotel/:idHotel?", async function (req, res) {
             let data = await executeQuery(`select hotel_id as "Hotel ID", AVG(review_score) as "Rating"  from review group by hotel_id`);
             return res.status(200).send(data)
         } else {
-            idHotel = req.params.idHotel.toUpperCase();
+            let idHotel = req.params.idHotel.toUpperCase();
             try {
                 // await checkHotelId(idHotel);
                 let data = await executeQuery(`select user_id as "User ID",review_content as "Review",review_score as "Rating" from review where hotel_id = '${idHotel}'`);
@@ -630,7 +617,6 @@ router.get("/reviewHotel/:idHotel?", async function (req, res) {
                 return res.status(404).send(error);
             }
         }
-
     }
 })
 

@@ -1,9 +1,9 @@
 {
 	"info": {
-		"_postman_id": "f3d572a9-6e62-482a-9414-17af21b9313f",
+		"_postman_id": "9504fcd8-bc80-4fe1-b941-1addebd4a703",
 		"name": "Proyek SOA",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-		"_exporter_id": "20688411"
+		"_exporter_id": "19493630"
 	},
 	"item": [
 		{
@@ -200,7 +200,368 @@
 					"name": "Get Reviews",
 					"request": {
 						"method": "GET",
-						"header": []
+						"header": [
+							{
+								"key": "x-auth-token",
+								"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJjbGllbnRfaWQiOiJmYkhOT1U3cTV2IiwiY2xpZW50X3NlY3JldCI6InQ4N3cxaWhpLXNkOHAtZzB2NC1hc2NjLXFseDMxbHh4MjYyOCIsImlhdCI6MTY1NTcwMDU5MiwiZXhwIjoxNjU1Nzg2OTkyfQ.69v5jtu0gz1oiZLKS1AFTqXxFaR03gVOzPj3c8P2RvA",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "localhost:3000/api/admin/review/gareth05@mail.com",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"admin",
+								"review",
+								"gareth05@mail.com"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Register",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "",
+								"value": "",
+								"type": "text",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "urlencoded",
+							"urlencoded": [
+								{
+									"key": "developer_name",
+									"value": "dev1",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "localhost:3000/api/admin/register",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"admin",
+								"register"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Login",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "",
+								"value": "",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "",
+								"value": "",
+								"type": "text",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "urlencoded",
+							"urlencoded": [
+								{
+									"key": "client_id",
+									"value": "fbHNOU7q5v",
+									"type": "text"
+								},
+								{
+									"key": "client_secret",
+									"value": "t87w1ihi-sd8p-g0v4-ascc-qlx31lxx2628",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "localhost:3000/api/admin/login",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"admin",
+								"login"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get User",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "x-auth-token",
+								"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJjbGllbnRfaWQiOiJmYkhOT1U3cTV2IiwiY2xpZW50X3NlY3JldCI6InQ4N3cxaWhpLXNkOHAtZzB2NC1hc2NjLXFseDMxbHh4MjYyOCIsImlhdCI6MTY1NTcwMDU5MiwiZXhwIjoxNjU1Nzg2OTkyfQ.69v5jtu0gz1oiZLKS1AFTqXxFaR03gVOzPj3c8P2RvA",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "localhost:3000/api/admin/user?email=gareth05@mail.com",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"admin",
+								"user"
+							],
+							"query": [
+								{
+									"key": "email",
+									"value": "gareth05@mail.com"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete User",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "x-auth-token",
+								"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJjbGllbnRfaWQiOiJmYkhOT1U3cTV2IiwiY2xpZW50X3NlY3JldCI6InQ4N3cxaWhpLXNkOHAtZzB2NC1hc2NjLXFseDMxbHh4MjYyOCIsImlhdCI6MTY1NTcwMDU5MiwiZXhwIjoxNjU1Nzg2OTkyfQ.69v5jtu0gz1oiZLKS1AFTqXxFaR03gVOzPj3c8P2RvA",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "localhost:3000/api/admin/user/gareth05@mail.com",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"admin",
+								"user",
+								"gareth05@mail.com"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Hotel",
+			"item": [
+				{
+					"name": "Search Hotel by Nama Kota",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "x-auth-token",
+								"value": "",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "localhost:3000/api/users/searchHotel/LONDON",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"users",
+								"searchHotel",
+								"LONDON"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Search Review Hotel",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "x-auth-token",
+								"value": "",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "localhost:3000/api/users/reviewHotel/",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"users",
+								"reviewHotel",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Review Hotel",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "x-auth-token",
+								"value": "",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "urlencoded",
+							"urlencoded": [
+								{
+									"key": "hotel_id",
+									"value": "",
+									"type": "text"
+								},
+								{
+									"key": "review_content",
+									"value": "",
+									"type": "text"
+								},
+								{
+									"key": "review_score",
+									"value": "",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "localhost:3000/api/users/reviewHotel",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"users",
+								"reviewHotel"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Flight",
+			"item": [
+				{
+					"name": "Search Flight",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "x-auth-token",
+								"value": "kJFjFArT5o",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": []
+						},
+						"url": {
+							"raw": "localhost:3000/api/users/searchFlight/CGK",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"users",
+								"searchFlight",
+								"CGK"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Options Flight",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "x-auth-token",
+								"value": "kJFjFArT5o",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "originLocation",
+									"value": "CGK",
+									"type": "text"
+								},
+								{
+									"key": "destinationLocation",
+									"value": "SUB",
+									"type": "text"
+								},
+								{
+									"key": "departure_date",
+									"value": "2022-06-11",
+									"type": "text"
+								},
+								{
+									"key": "adults",
+									"value": "1",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "localhost:3000/api/users/optionsFlight",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"users",
+								"optionsFlight"
+							]
+						}
 					},
 					"response": []
 				}
@@ -220,94 +581,6 @@
 					"path": [
 						"api",
 						"test"
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "Search Flight",
-			"protocolProfileBehavior": {
-				"disableBodyPruning": true
-			},
-			"request": {
-				"method": "GET",
-				"header": [
-					{
-						"key": "x-auth-token",
-						"value": "kJFjFArT5o",
-						"type": "text"
-					}
-				],
-				"body": {
-					"mode": "formdata",
-					"formdata": []
-				},
-				"url": {
-					"raw": "localhost:3000/api/users/searchFlight/CGK",
-					"host": [
-						"localhost"
-					],
-					"port": "3000",
-					"path": [
-						"api",
-						"users",
-						"searchFlight",
-						"CGK"
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "Options Flight",
-			"protocolProfileBehavior": {
-				"disableBodyPruning": true
-			},
-			"request": {
-				"method": "GET",
-				"header": [
-					{
-						"key": "x-auth-token",
-						"value": "kJFjFArT5o",
-						"type": "text"
-					}
-				],
-				"body": {
-					"mode": "formdata",
-					"formdata": [
-						{
-							"key": "originLocation",
-							"value": "CGK",
-							"type": "text"
-						},
-						{
-							"key": "destinationLocation",
-							"value": "SUB",
-							"type": "text"
-						},
-						{
-							"key": "departure_date",
-							"value": "2022-06-11",
-							"type": "text"
-						},
-						{
-							"key": "adults",
-							"value": "1",
-							"type": "text"
-						}
-					]
-				},
-				"url": {
-					"raw": "localhost:3000/api/users/optionsFlight",
-					"host": [
-						"localhost"
-					],
-					"port": "3000",
-					"path": [
-						"api",
-						"users",
-						"optionsFlight"
 					]
 				}
 			},
