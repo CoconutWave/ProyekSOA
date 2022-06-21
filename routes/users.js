@@ -13,7 +13,8 @@ const storage = multer.diskStorage({
     filename: function (req, file, cb) {
         // let date = new Date();
         // console.log(date.toString());
-        cb(null, req.header("x-auth-token"));
+        const extension = file.originalname.split('.')[file.originalname.split('.').length-1];
+        cb(null, req.header("x-auth-token") + "." + extension);
     }
 });
 const upload = multer({
@@ -22,7 +23,7 @@ const upload = multer({
 
 // ------------------ VAR ------------------
 const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-const key = "Bearer ckdP0RFAQsMU2vpMivSUpRSJQzf7"; //aku ganti punyaku
+const key = "Bearer TFsj3yPrU8uZ75wv6HBSe1V1KebA"; //aku ganti punyaku
 
 // ------------------ FUNCTION ------------------
 const generateUniqueApikey = (length) => {
@@ -260,20 +261,42 @@ router.put("/update", [checkUser, upload.none()], async function (req, res) {
 
 });
 
-//update photo-user [BELUM]
+//update photo-user [DONE, need testing]
 router.put("/updatePhoto", [checkUser, upload.single("IDCard")], async function (req, res) {
     let header = req.header('x-auth-token');
     req.body.ktpapikey = header;
-
-    const user = await executeQuery(`select * 
+    let user;
+    try {
+        user = await executeQuery(`select id, apikey, id_card_dir 
         from users 
         where apikey = '${header}'
         and is_active = 1`);
+    } catch (error) {
+        console.log(error);
+        return res.status(500).send({message: "Internal error!"});
+    }
 
-
-
-
-
+    if(user.length == 0){
+        fs.unlinkSync(`/uploads/${header}`);
+        return res.status(404).send({message: "User not found!"});
+    }
+    
+    try {
+        let update_user = await executeQuery(`update users set id_card_dir = "/uploads/${header}" where id = ${user[0].id}`);
+        let message = "ID Card photo successfully updated";
+        // console.log(user[0].id_card_dir);
+        if(user[0].id_card_dir == null){
+            message = "ID Card photo successfully uploaded";
+        }
+        return res.status(200).send({
+            message: message,
+            API_key: user[0].apikey,
+            id_card_directory: "/uploads/"+header
+        });
+    } catch (error) {
+        console.log(error);
+        return res.status(500).send({message: "Internal error!"});
+    }
 });
 
 //search flight [DONE]
@@ -395,8 +418,9 @@ router.get("/optionsFlight/", [checkUser, upload.none()], async function (req, r
     }
 });
 
-//search hotel (masukin nama kotanya) [BELUM || PERIKSA]
+//search hotel (masukin nama kotanya) [BELUM || PERIKSA] [iki temenan durung mari blas, nanti dibahas lgi, aku push dulu]
 router.get("/searchHotel/:idCity", upload.none(), async function (req, res) {
+    let header = req.header("x-auth-token");
     let update = await executeQuery(`update users set apihit = apihit - 1 where apikey = "${header}"`);
     if (!update) {
         return res.status(401).send({
@@ -410,18 +434,25 @@ router.get("/searchHotel/:idCity", upload.none(), async function (req, res) {
             headers: {
                 'Authorization': key
             }
-        })
+        });
+    // console.log(cityName.data.data);
     let city = cityName.data.data;
+    if(city.length == 0){
+        return res.status(404).send({message:"No data for city "+idCity});
+    }
+    // return res.status(200).send({message: "ok"});
 
     let numb = -1;
     for (let i = 0; i < city.length; i++) {
-        if (city[i].name.includes(idCity)) numb = i;
+        if (city[i].name.includes(idCity)){
+            numb = i;
+            break;
+        }
     }
-
     let cityCode = city[numb].address.cityCode;
-
-    console.log(city[numb].name + " - " + city[numb].address.cityCode)
-
+    console.log("=================");
+    console.log(city[numb].name + " - " + city[numb].address.cityCode);
+    console.log("=================");
     // return res.status(200).send({
     //     "name": city[numb].name,
     //     "cityCode" : city[numb].address.cityCode,
@@ -458,12 +489,12 @@ router.get("/searchHotel/:idCity", upload.none(), async function (req, res) {
             let rate = 5;
             let review = await executeQuery(`select AVG(review_score) as rate from review where hotel_id = '${data[i].hotelId}'`);
             if (review.length > 0) rate = review[0].rate;
-
+            console.log(data[i]);
             let temp = {
                 "name": data[i].name,
                 "hotelId": data[i].hotelId,
-                "countryCode": data[i].address.countryCode,
-                "rating": rate
+                "iataCode": data[i].iataCode
+                
             }
             hotel.push(temp);
         }
@@ -475,13 +506,14 @@ router.get("/searchHotel/:idCity", upload.none(), async function (req, res) {
             }
         });
     } catch (error) {
+        console.log(error);
         return res.status(400).send({
             message: "Internal error!"
         });
     }
 });
 
-// post & update review hotel
+// post & update review hotel [DONE]
 router.post("/reviewHotel", [checkUser,upload.none()], async function (req, res) {
     let user_id = req.header.user_id
     // validasi body
@@ -532,9 +564,9 @@ router.post("/reviewHotel", [checkUser,upload.none()], async function (req, res)
     } else {
         return res.status(500).send('Server error occured')
     }
-})
+});
 
-// option hotel [Donen't]
+// option hotel [BELUM]
 router.get("/optionsHotel", [checkUser,upload.none()], async function (req, res){
     const body = req.body;
     const schema = Joi.object({
@@ -565,7 +597,7 @@ router.get("/optionsHotel", [checkUser,upload.none()], async function (req, res)
         return res.status(400).send(error.toString());
     }
     return res.send("done")
-})
+});
 
 //cari review hotel 
 router.get("/reviewHotel/:idHotel?", [checkUser], async function (req, res) {
@@ -593,6 +625,6 @@ router.get("/reviewHotel/:idHotel?", [checkUser], async function (req, res) {
             return res.status(404).send("Hotel not found");
         }
     }
-})
+});
 
 module.exports = router;
