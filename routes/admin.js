@@ -219,7 +219,7 @@ router.delete("/user/:email", async function (req, res) {
     }
 });
 
-//get review
+//get all review from user [PERIKSA]
 router.get("/review/:email", async function (req, res) {
     if(!req.header('x-auth-token')) return res.status(401).send({"msg":"token tidak ditemukan!"});
     let header = req.header('x-auth-token');

@@ -23,7 +23,7 @@ const upload = multer({
 
 // ------------------ VAR ------------------
 const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-const key = "Bearer TFsj3yPrU8uZ75wv6HBSe1V1KebA"; //aku ganti punyaku
+const key = "Bearer oqEjfC9IIaOy5ZXhWp5mlgOX2czz"; //aku ganti punyaku
 
 // ------------------ FUNCTION ------------------
 const generateUniqueApikey = (length) => {
@@ -276,7 +276,7 @@ router.put("/updatePhoto", [checkUser, upload.single("IDCard")], async function 
         return res.status(500).send({message: "Internal error!"});
     }
 
-    if(user.length == 0){
+    if(user.length === 0){
         fs.unlinkSync(`/uploads/${header}`);
         return res.status(404).send({message: "User not found!"});
     }
@@ -437,7 +437,7 @@ router.get("/searchHotel/:idCity", upload.none(), async function (req, res) {
         });
     // console.log(cityName.data.data);
     let city = cityName.data.data;
-    if(city.length == 0){
+    if(city.length === 0){
         return res.status(404).send({message:"No data for city "+idCity});
     }
     // return res.status(200).send({message: "ok"});
@@ -513,7 +513,7 @@ router.get("/searchHotel/:idCity", upload.none(), async function (req, res) {
     }
 });
 
-// post & update review hotel [DONE]
+//post & update review hotel [DONE]
 router.post("/reviewHotel", [checkUser,upload.none()], async function (req, res) {
     let user_id = req.header.user_id
     // validasi body
@@ -566,7 +566,7 @@ router.post("/reviewHotel", [checkUser,upload.none()], async function (req, res)
     }
 });
 
-// option hotel [BELUM]
+// hotel options  [BELUM]
 router.get("/optionsHotel", [checkUser,upload.none()], async function (req, res){
     const body = req.body;
     const schema = Joi.object({
@@ -582,16 +582,28 @@ router.get("/optionsHotel", [checkUser,upload.none()], async function (req, res)
     }
     
     try{
-        var hotel = await axios.get(
+        let hotel = await axios.get(
             `https://test.api.amadeus.com/v3/shopping/hotel-offers?hotelIds=${body.hotel_id}&adults=${body.adults}&checkInDate=${body.checkIn_date}&roomQuantity=${body.room_quantity}`, {
                 headers: {
                     'Authorization': key
                 }
             });
-        hotel = hotel.data.data[0]
-        console.log(hotel.hotel.name)
-        console.log(hotel.offers[0].room)
-        console.log(hotel.offers[0].price)
+        //return res.status(400).send(hotel.data+" - "+hotel.data.data.length);
+        if(hotel.data.data.length<1) return res.status(400).send({
+            "errors": [
+                {
+                    "status": 400,
+                    "code": 3664,
+                    "title": "NO ROOMS AVAILABLE AT REQUESTED PROPERTY"
+                }
+            ]
+        });
+        else {
+            hotel = hotel.data.data[0]
+            console.log(hotel.hotel.name)
+            console.log(hotel.offers[0].room)
+            console.log(hotel.offers[0].price)
+        }
     }
     catch(error){
         return res.status(400).send(error.toString());
@@ -599,7 +611,7 @@ router.get("/optionsHotel", [checkUser,upload.none()], async function (req, res)
     return res.send("done")
 });
 
-//cari review hotel 
+//cari review hotel [PERIKSA]
 router.get("/reviewHotel/:idHotel?", [checkUser], async function (req, res) {
     if (!req.params.idHotel) {
         let data = await executeQuery(`select hotel_name as "Hotel Name", AVG(review_score) as "Rating"  from review group by hotel_id`);
