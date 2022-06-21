@@ -1,6 +1,6 @@
 /*
-SQLyog Community v13.1.7 (64 bit)
-MySQL - 10.4.20-MariaDB : Database - soaproject_hotel_flight
+SQLyog Community v13.1.9 (64 bit)
+MySQL - 10.4.22-MariaDB : Database - soaproject_hotel_flight
 *********************************************************************
 */
 
@@ -48,9 +48,47 @@ developer_name` varchar(50) NOT NULL,
 insert  into `developer_account`(`client_id`,`
 client_secret`,`
 developer_name`) values 
-('','',''),
-('e7UpVoVt99','ma3y05ca-8ayh-qg1p-o2hb-iuz1hs1cxuyb','undefined'),
+('e7UpVoVt99','ma3y05ca-8ayh-qg1p-o2hb-iuz1hs1cxuyb','dev0'),
 ('fbHNOU7q5v','t87w1ihi-sd8p-g0v4-ascc-qlx31lxx2628','dev1');
+
+/*Table structure for table `hotels` */
+
+DROP TABLE IF EXISTS `hotels`;
+
+CREATE TABLE `hotels` (
+  `hotel_id` varchar(15) NOT NULL,
+  `hotel_name` varchar(50) NOT NULL,
+  `city_id` varchar(15) NOT NULL,
+  PRIMARY KEY (`hotel_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+/*Data for the table `hotels` */
+
+insert  into `hotels`(`hotel_id`,`hotel_name`,`city_id`) values 
+('ADNYCCTB','FOUR SEASONS HOTEL NEW YORK DOWNTOWN','NYC'),
+('AELONCNP','BATTY LANGLEY\'S','LON'),
+('BBLONBTL','STAR HOTEL BED & BREAKFAST','LON'),
+('BBNYCAGE','FAIRFIELD INN BY MARRIOTT JFK AIRPORT','NYC'),
+('CTLONCMB','ST MARTINS LANE HOTEL ','LON'),
+('DKLONDSF','THE DORCHESTER HOTEL ','LON'),
+('FANYC100','THE PLAZA HOTEL ','NYC'),
+('GUNYCAKQ	','ALGONQUIN HOTEL TIMES SQUARE AUTOGRAPH C','NYC'),
+('GUNYCAXZ','RESIDENCE INN NEW YORK THE BRONX AT METR','NYC'),
+('HDAYSABT','THE ASSEMBLAGE JOHN STREET','NYC'),
+('HDNYCFJK','THE WHITBY HOTEL ','NYC'),
+('HIJFK47B','HOLIDAY INN EXPRESS BROOKLYN','NYC'),
+('HOLON187','THE NADLER SOHO','LON'),
+('HYNYCWVE','HYATT HOUSE JERSEY CITY','NYC'),
+('ICNYCCF8','INTERCONTINENTAL TIMES SQUARE','NYC'),
+('PILONBHG','PREMIER INN LONDON TOLWORTH','LON'),
+('RILONJBG','THE LANESBOROUGH','LON'),
+('RTLONWAT','NOVOTEL LONDON WATERLOO','LON'),
+('SJLONCLR','THE CHESTERFIELD MAYFAIR','LON'),
+('SJNYCAJA','HOLIDAY INN MANHATTAN VIEW','NYC'),
+('SJNYCAVS','HOTEL GIRAFFE','NYC'),
+('TELONMFS','HILTON LONDON PADDINGTON','LON'),
+('TENYCAPA','HOLIDAY INN EXPRESS MANHATTAN MIDTOWN WEST','NYC'),
+('WVNYCBRY','BRYANT PARK HOTEL ','NYC');
 
 /*Table structure for table `review` */
 

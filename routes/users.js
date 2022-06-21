@@ -23,7 +23,7 @@ const upload = multer({
 
 // ------------------ VAR ------------------
 const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-const key = "Bearer oqEjfC9IIaOy5ZXhWp5mlgOX2czz"; //aku ganti punyaku
+const key = "Bearer nuWbpKmO4zTDQkWgGXWWkxbgpjsi"; //aku ganti punyaku
 
 // ------------------ FUNCTION ------------------
 const generateUniqueApikey = (length) => {
@@ -97,6 +97,7 @@ const getHotel = async (id) => {
     }
 }
 
+// ------------------ DEFAULT ------------------
 //register new user [DONE]
 router.post("/register", upload.none(), async function (req, res) {
     console.log(req.body);
@@ -299,6 +300,7 @@ router.put("/updatePhoto", [checkUser, upload.single("IDCard")], async function 
     }
 });
 
+// ------------------ FLIGHT ------------------
 //search flight [DONE]
 router.get("/searchFlight/:airportCode", [checkUser, upload.none()], async function (req, res) {
     //Departure Airport code following IATA standard
@@ -418,6 +420,63 @@ router.get("/optionsFlight/", [checkUser, upload.none()], async function (req, r
     }
 });
 
+//booking/checkIn flight
+router.post("/checkInFlight/", async function(req, res) {
+    console.log(req.body);
+    const schema =
+        Joi.object({
+            originLocationCode: Joi.string().max(3).min(3).required(),
+            destinationLocationCode: Joi.string().max(3).min(3).required(),
+            departureDate : Joi.date().format('YYYY-MM-DD').required(),
+            adults: Joi.number().required(),
+            includedAirlineCodes: Joi.string().required()
+        })
+
+    let originLocationCode = req.body.originLocationCode;
+    let destinationLocationCode = req.body.destinationLocationCode;
+    let departureDate = req.body.departureDate;
+    let adults = Number(req.body.adults);
+    let includedAirlineCodes = req.body.includedAirlineCodes;
+
+    try {
+        await schema.validateAsync(req.body);
+    } catch (error) {
+        return res.status(403).send(error.toString());
+    }
+
+    let offers = await axios.get(
+        `https://test.api.amadeus.com/v2/shopping/flight-offers?originLocationCode=${originLocationCode}&destinationLocationCode=${destinationLocationCode}&departureDate=${departureDate}&adults=${adults}&includedAirlineCodes=${includedAirlineCodes}`, {
+            headers: {
+                'Authorization': key
+            }
+        });
+
+    if(offers.data.length<1) {
+         return res.status(400).send({
+             "error" : "Flight Not Found"
+         })
+    }
+    //return res.status(200).send(offers.data.data);
+    let data = offers.data.data[0];
+    let duration = data.itineraries.durations;
+    let aircraft = data.validatingAirlineCodes;
+    let segments = [];
+    let count_segments = data.itineraries.segments;
+    for(let i=0; i<count_segments.length;i++) {
+        let temp = {
+            "departure" : count_segments.departure,
+            "arrival" : count_segments.arrival,
+            "carrierCode" : count_segments.carrierCode,
+            "aircraft" : count_segments.aircraft.code,
+            "duration" : count_segments.duration
+        }
+        segments.push(temp);
+    }
+    let price = data.price.currency + " " + itineraries.price.grandTotal;
+    let departure = data.itineraries.segments.departure;
+})
+
+// ------------------ HOTEL ------------------
 //search hotel (masukin nama kotanya) [BELUM || PERIKSA] [iki temenan durung mari blas, nanti dibahas lgi, aku push dulu]
 router.get("/searchHotel/:idCity", upload.none(), async function (req, res) {
     let header = req.header("x-auth-token");
@@ -638,5 +697,6 @@ router.get("/reviewHotel/:idHotel?", [checkUser], async function (req, res) {
         }
     }
 });
+
 
 module.exports = router;
