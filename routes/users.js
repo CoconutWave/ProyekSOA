@@ -570,7 +570,7 @@ router.get("/searchFlight/:airportCode", [checkUser, upload.none()], async funct
 //search hotel (masukin nama kotanya) [DONE|Perlu diperiksa]
 router.get("/searchHotel", [checkUser, upload.none()], async function (req, res) {
     let header = req.header("x-auth-token");
-    let update = await executeQuery(`update users set apihit = apihit - 1 where apikey = "${header}"`);
+    let update = doAPIHit(header,1);
     if (!update) {
         return res.status(401).send({
             message: "Hit quota exceeded"
@@ -774,6 +774,12 @@ router.post("/reviewHotel", [checkUser, upload.none()], async function (req, res
 
 //cari review hotel [PERIKSA]
 router.get("/reviewHotel/:idHotel?", [checkUser], async function (req, res) {
+    let update = doAPIHit(search_user.id, 1);
+    if (!update) {
+        return res.status(401).send({
+            message: "Hit quota exceeded"
+        });
+    }
     if (!req.params.idHotel) {
         let data = await executeQuery(`select hotel_name as "Hotel Name", AVG(review_score) as "Rating"  from review group by hotel_id`);
         return res.status(200).send(data)
@@ -803,6 +809,12 @@ router.get("/reviewHotel/:idHotel?", [checkUser], async function (req, res) {
 // search activities berdasarkan nama tempat [PERIKSA]
 router.get("/searchActivities/:location", [checkUser, upload.none()], async function (req, res) {
     // cek param
+    let update = doAPIHit(search_user.id, 1);
+    if (!update) {
+        return res.status(401).send({
+            message: "Hit quota exceeded"
+        });
+    }
     let location = req.params.location
     if (!location) {
         return res.status(400).send("Please provide location")
