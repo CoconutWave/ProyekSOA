@@ -1,6 +1,6 @@
 /*
-SQLyog Community v13.1.7 (64 bit)
-MySQL - 10.4.20-MariaDB : Database - soaproject_hotel_flight
+SQLyog Community v13.1.9 (64 bit)
+MySQL - 10.4.22-MariaDB : Database - soaproject_hotel_flight
 *********************************************************************
 */
 
@@ -35,19 +35,23 @@ client_id` varchar(50) NOT NULL,
 DROP TABLE IF EXISTS `d_route`;
 
 CREATE TABLE `d_route` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
   `route_id` int(11) NOT NULL,
-  `city_id` varchar(5) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+  `city_id` varchar(5) NOT NULL,
+  `country_id` varchar(5) NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4;
 
 /*Data for the table `d_route` */
 
-insert  into `d_route`(`route_id`,`city_id`) values 
-(1,'LON'),
-(1,'PAR'),
-(2,'SUB'),
-(2,'SRG'),
-(2,'BDO'),
-(2,'JOG');
+insert  into `d_route`(`id`,`route_id`,`city_id`,`country_id`) values 
+(1,1,'LON',''),
+(2,1,'PAR',''),
+(3,2,'SUB',''),
+(4,2,'SRG',''),
+(5,2,'BDO',''),
+(6,2,'JOG',''),
+(7,3,'PAR','FR');
 
 /*Table structure for table `developer_account` */
 
@@ -136,14 +140,16 @@ CREATE TABLE `route` (
   `user_id` int(11) NOT NULL,
   `route_name` varchar(20) NOT NULL,
   `date_created` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  `status` int(11) DEFAULT 0 COMMENT '0: active-pending, 1: active - completed, 2: delete',
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4;
 
 /*Data for the table `route` */
 
-insert  into `route`(`id`,`user_id`,`route_name`,`date_created`) values 
-(1,2,'Vacation with bestie','2022-06-22 09:35:30'),
-(2,3,'Research Trip','2022-06-22 09:36:00');
+insert  into `route`(`id`,`user_id`,`route_name`,`date_created`,`status`) values 
+(1,2,'Vacation with bestie','2022-06-22 09:35:30',0),
+(2,3,'Research Trip','2022-06-22 09:36:00',0),
+(3,1,'trip1','2022-06-22 13:02:49',0);
 
 /*Table structure for table `subscription_plan` */
 

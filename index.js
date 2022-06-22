@@ -5,6 +5,8 @@ const {executeQuery} = require("./database");
 
 const users = require("./routes/users");
 const admin = require("./routes/admin");
+const trip = require("./routes/trip");
+
 app.use(express.urlencoded({extended: true}));
 
 /*
@@ -32,12 +34,14 @@ Amadeus
 
 */
 app.get("/api/test", function (req, res) {
-    return res.status(200).send({message: "Berhasil a"});
+    return res.status(200).send({message: "Berhasil"});
 });
 
 app.use("/api/users", users);
 
 app.use("/api/admin", admin);
+
+app.use("/api/trip", trip);
 
 app.listen(port, function () {
     console.log("API online, listening to port "+port);

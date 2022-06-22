@@ -23,7 +23,7 @@ const upload = multer({
 
 // ------------------ VAR ------------------
 const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-const key = "Bearer gDCzebXAhitAPR9T8ZUAeyuZ2LIA"; //aku ganti punyaku
+const key = "Bearer PaRWYGTHyIyeqABCwfBrdoco9vYG"; //aku ganti punyaku
 
 // ------------------ FUNCTION ------------------
 const generateUniqueApikey = (length) => {
@@ -354,131 +354,131 @@ router.get("/searchFlight/:airportCode", [checkUser, upload.none()], async funct
 });
 
 //flight options [PERIKSA]
-router.get("/optionsFlight/", [checkUser, upload.none()], async function (req, res) {
-    const schema =
-        Joi.object({
-            originLocation: Joi.string().required(),
-            destinationLocation: Joi.string().required(),
-            departure_date: Joi.date().format('YYYY-MM-DD').required(),
-            adults: Joi.number().min(1).required(),
-        })
+// router.get("/optionsFlight/", [checkUser, upload.none()], async function (req, res) {
+//     const schema =
+//         Joi.object({
+//             originLocation: Joi.string().required(),
+//             destinationLocation: Joi.string().required(),
+//             departure_date: Joi.date().format('YYYY-MM-DD').required(),
+//             adults: Joi.number().min(1).required(),
+//         })
+//
+//     try {
+//         await schema.validateAsync(req.body);
+//     } catch (error) {
+//         return res.status(403).send(error.toString());
+//     }
+//
+//     let header = req.header('x-auth-token');
+//     console.log(req.body);
+//     try {
+//         let update = doAPIHit(header,1);
+//          if (!update) {
+//             return res.status(401).send({
+//                 message: "Apihit tidak mencukupi"
+//             });
+//         }
+//
+//         let origin = req.body.originLocation.toUpperCase();
+//         let dest = req.body.destinationLocation.toUpperCase();
+//         let departure_date = req.body.departure_date;
+//         let adults = Number(req.body.adults);
+//
+//         let hasil = await axios.get(
+//             `https://test.api.amadeus.com/v2/shopping/flight-offers?originLocationCode=${origin}&destinationLocationCode=${dest}&departureDate=${departure_date}&adults=${adults}`, {
+//                 headers: {
+//                     'Authorization': key
+//                 }
+//             })
+//         let data = hasil.data.data;
+//         console.log(data);
+//
+//         let flight_offer = [];
+//         for (let i = 0; i < data.length; i++) {
+//             let temp = {
+//                 "source": data[i].source,
+//                 "lastTicketingDate": data[i].lastTicketingDate,
+//                 "numberOfBookableSeats": data[i].numberOfBookableSeats,
+//                 "itineraries": data[i].itineraries,
+//                 "price": data[i].price.currency + " " + data[i].price.total,
+//                 "validatingAirlineCodes": data[i].validatingAirlineCodes,
+//                 "travelerPricings": data[i].travelerPricings
+//             }
+//             flight_offer.push(temp);
+//         }
+//
+//         return res.status(200).send({
+//             body: {
+//                 "count": data.length,
+//                 "flight_offer": flight_offer
+//             }
+//         });
+//     } catch (error) {
+//         return res.status(400).send({
+//             message: "Internal error!"
+//         });
+//     }
+// });
 
-    try {
-        await schema.validateAsync(req.body);
-    } catch (error) {
-        return res.status(403).send(error.toString());
-    }
-
-    let header = req.header('x-auth-token');
-    console.log(req.body);
-    try {
-        let update = doAPIHit(header,1);
-         if (!update) {
-            return res.status(401).send({
-                message: "Apihit tidak mencukupi"
-            });
-        }
-
-        let origin = req.body.originLocation.toUpperCase();
-        let dest = req.body.destinationLocation.toUpperCase();
-        let departure_date = req.body.departure_date;
-        let adults = Number(req.body.adults);
-
-        let hasil = await axios.get(
-            `https://test.api.amadeus.com/v2/shopping/flight-offers?originLocationCode=${origin}&destinationLocationCode=${dest}&departureDate=${departure_date}&adults=${adults}`, {
-                headers: {
-                    'Authorization': key
-                }
-            })
-        let data = hasil.data.data;
-        console.log(data);
-
-        let flight_offer = [];
-        for (let i = 0; i < data.length; i++) {
-            let temp = {
-                "source": data[i].source,
-                "lastTicketingDate": data[i].lastTicketingDate,
-                "numberOfBookableSeats": data[i].numberOfBookableSeats,
-                "itineraries": data[i].itineraries,
-                "price": data[i].price.currency + " " + data[i].price.total,
-                "validatingAirlineCodes": data[i].validatingAirlineCodes,
-                "travelerPricings": data[i].travelerPricings
-            }
-            flight_offer.push(temp);
-        }
-
-        return res.status(200).send({
-            body: {
-                "count": data.length,
-                "flight_offer": flight_offer
-            }
-        });
-    } catch (error) {
-        return res.status(400).send({
-            message: "Internal error!"
-        });
-    }
-});
-
-//booking/checkIn flight
-router.post("/checkInFlight/", async function(req, res) {
-    console.log(req.body);
-    const schema =
-        Joi.object({
-            originLocationCode: Joi.string().max(3).min(3).required(),
-            destinationLocationCode: Joi.string().max(3).min(3).required(),
-            departureDate : Joi.date().format('YYYY-MM-DD').required(),
-            adults: Joi.number().required(),
-            includedAirlineCodes: Joi.string().required()
-        })
-
-    let originLocationCode = req.body.originLocationCode;
-    let destinationLocationCode = req.body.destinationLocationCode;
-    let departureDate = req.body.departureDate;
-    let adults = Number(req.body.adults);
-    let includedAirlineCodes = req.body.includedAirlineCodes;
-
-    try {
-        await schema.validateAsync(req.body);
-    } catch (error) {
-        return res.status(403).send(error.toString());
-    }
-
-    let offers = await axios.get(
-        `https://test.api.amadeus.com/v2/shopping/flight-offers?originLocationCode=${originLocationCode}&destinationLocationCode=${destinationLocationCode}&departureDate=${departureDate}&adults=${adults}&includedAirlineCodes=${includedAirlineCodes}`, {
-            headers: {
-                'Authorization': key
-            }
-        });
-
-    if(offers.data.length<1) {
-         return res.status(400).send({
-             "error" : "Flight Not Found"
-         })
-    }
-    //return res.status(200).send(offers.data.data);
-    let data = offers.data.data[0];
-    let duration = data.itineraries.durations;
-    let aircraft = data.validatingAirlineCodes;
-    let segments = [];
-    let count_segments = data.itineraries.segments;
-    for(let i=0; i<count_segments.length;i++) {
-        let temp = {
-            "departure" : count_segments.departure,
-            "arrival" : count_segments.arrival,
-            "carrierCode" : count_segments.carrierCode,
-            "aircraft" : count_segments.aircraft.code,
-            "duration" : count_segments.duration
-        }
-        segments.push(temp);
-    }
-    let price = data.price.currency + " " + itineraries.price.grandTotal;
-    let departure = data.itineraries.segments.departure;
-})
+// //booking/checkIn flight
+// router.post("/checkInFlight/", async function(req, res) {
+//     console.log(req.body);
+//     const schema =
+//         Joi.object({
+//             originLocationCode: Joi.string().max(3).min(3).required(),
+//             destinationLocationCode: Joi.string().max(3).min(3).required(),
+//             departureDate : Joi.date().format('YYYY-MM-DD').required(),
+//             adults: Joi.number().required(),
+//             includedAirlineCodes: Joi.string().required()
+//         })
+//
+//     let originLocationCode = req.body.originLocationCode;
+//     let destinationLocationCode = req.body.destinationLocationCode;
+//     let departureDate = req.body.departureDate;
+//     let adults = Number(req.body.adults);
+//     let includedAirlineCodes = req.body.includedAirlineCodes;
+//
+//     try {
+//         await schema.validateAsync(req.body);
+//     } catch (error) {
+//         return res.status(403).send(error.toString());
+//     }
+//
+//     let offers = await axios.get(
+//         `https://test.api.amadeus.com/v2/shopping/flight-offers?originLocationCode=${originLocationCode}&destinationLocationCode=${destinationLocationCode}&departureDate=${departureDate}&adults=${adults}&includedAirlineCodes=${includedAirlineCodes}`, {
+//             headers: {
+//                 'Authorization': key
+//             }
+//         });
+//
+//     if(offers.data.length<1) {
+//          return res.status(400).send({
+//              "error" : "Flight Not Found"
+//          })
+//     }
+//     //return res.status(200).send(offers.data.data);
+//     let data = offers.data.data[0];
+//     let duration = data.itineraries.durations;
+//     let aircraft = data.validatingAirlineCodes;
+//     let segments = [];
+//     let count_segments = data.itineraries.segments;
+//     for(let i=0; i<count_segments.length;i++) {
+//         let temp = {
+//             "departure" : count_segments.departure,
+//             "arrival" : count_segments.arrival,
+//             "carrierCode" : count_segments.carrierCode,
+//             "aircraft" : count_segments.aircraft.code,
+//             "duration" : count_segments.duration
+//         }
+//         segments.push(temp);
+//     }
+//     let price = data.price.currency + " " + itineraries.price.grandTotal;
+//     let departure = data.itineraries.segments.departure;
+// })
 
 // ------------------ HOTEL ------------------
 //search hotel (masukin nama kotanya) [DONE|Perlu diperiksa]
-router.get("/searchHotel", upload.none(), async function (req, res) {
+router.get("/searchHotel", [checkUser, upload.none()], async function (req, res) {
     let header = req.header("x-auth-token");
     let update = await executeQuery(`update users set apihit = apihit - 1 where apikey = "${header}"`);
     if (!update) {
@@ -486,6 +486,8 @@ router.get("/searchHotel", upload.none(), async function (req, res) {
             message: "Apihit tidak mencukupi"
         });
     }
+
+    //return res.status(200).send(req.query)
 
     let idCity = req.query.idCity.toUpperCase();
     let countryCode = req.query.countryCode.toUpperCase();
@@ -631,50 +633,50 @@ router.post("/reviewHotel", [checkUser,upload.none()], async function (req, res)
     }
 });
 
-// hotel options  [BELUM]
-router.get("/optionsHotel", [checkUser,upload.none()], async function (req, res){
-    const body = req.body;
-    const schema = Joi.object({
-        hotel_id: Joi.string().external(checkHotelId).required(),
-        adults: Joi.number().min(1).max(9).required(),
-        checkIn_date: Joi.date().format('YYYY-MM-DD').required(),
-        room_quantity: Joi.number().min(1).max(9).required(),
-    });
-    try {
-        await schema.validateAsync(body);
-    } catch (error) {
-        return res.status(400).send(error.toString());
-    }
-    
-    try{
-        let hotel = await axios.get(
-            `https://test.api.amadeus.com/v3/shopping/hotel-offers?hotelIds=${body.hotel_id}&adults=${body.adults}&checkInDate=${body.checkIn_date}&roomQuantity=${body.room_quantity}`, {
-                headers: {
-                    'Authorization': key
-                }
-            });
-        //return res.status(400).send(hotel.data+" - "+hotel.data.data.length);
-        if(hotel.data.data.length<1) return res.status(400).send({
-            "errors": [
-                {
-                    "status": 400,
-                    "code": 3664,
-                    "title": "NO ROOMS AVAILABLE AT REQUESTED PROPERTY"
-                }
-            ]
-        });
-        else {
-            hotel = hotel.data.data[0]
-            console.log(hotel.hotel.name)
-            console.log(hotel.offers[0].room)
-            console.log(hotel.offers[0].price)
-        }
-    }
-    catch(error){
-        return res.status(400).send(error.toString());
-    }
-    return res.send("done")
-});
+// // hotel options  [BELUM]
+// router.get("/optionsHotel", [checkUser,upload.none()], async function (req, res){
+//     const body = req.body;
+//     const schema = Joi.object({
+//         hotel_id: Joi.string().external(checkHotelId).required(),
+//         adults: Joi.number().min(1).max(9).required(),
+//         checkIn_date: Joi.date().format('YYYY-MM-DD').required(),
+//         room_quantity: Joi.number().min(1).max(9).required(),
+//     });
+//     try {
+//         await schema.validateAsync(body);
+//     } catch (error) {
+//         return res.status(400).send(error.toString());
+//     }
+//
+//     try{
+//         let hotel = await axios.get(
+//             `https://test.api.amadeus.com/v3/shopping/hotel-offers?hotelIds=${body.hotel_id}&adults=${body.adults}&checkInDate=${body.checkIn_date}&roomQuantity=${body.room_quantity}`, {
+//                 headers: {
+//                     'Authorization': key
+//                 }
+//             });
+//         //return res.status(400).send(hotel.data+" - "+hotel.data.data.length);
+//         if(hotel.data.data.length<1) return res.status(400).send({
+//             "errors": [
+//                 {
+//                     "status": 400,
+//                     "code": 3664,
+//                     "title": "NO ROOMS AVAILABLE AT REQUESTED PROPERTY"
+//                 }
+//             ]
+//         });
+//         else {
+//             hotel = hotel.data.data[0]
+//             console.log(hotel.hotel.name)
+//             console.log(hotel.offers[0].room)
+//             console.log(hotel.offers[0].price)
+//         }
+//     }
+//     catch(error){
+//         return res.status(400).send(error.toString());
+//     }
+//     return res.send("done")
+// });
 
 //cari review hotel [PERIKSA]
 router.get("/reviewHotel/:idHotel?", [checkUser], async function (req, res) {
