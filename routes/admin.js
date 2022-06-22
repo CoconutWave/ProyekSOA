@@ -110,7 +110,7 @@ router.post("/login", async function (req, res) {
     });
 });
 
-//bayar ?? [PERIKSA]
+//add new package [PERIKSA]
 router.post("/bill", async function (req, res) {
     if (!req.header('x-auth-token')) return res.status(401).send({
         "msg": "Token Requied!"

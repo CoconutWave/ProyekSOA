@@ -5,10 +5,11 @@ const {
     executeQuery
 } = require("../database");
 const axios = require("axios");
-const fs = require("fs");
+const jwt = require("jsonwebtoken");
 
 // ------------------ VAR ------------------
 const key = "Bearer camnAcFPQIxWtBbclCZkzbkLEPHv";
+const secret = "proyeksoauserbagian";
 
 // ------------------ FUNCTION ------------------
 const checkUser = async function (req, res, next) {
@@ -18,7 +19,15 @@ const checkUser = async function (req, res, next) {
             message: "Unauthorized!"
         });
     }
-    let search_user = await executeQuery(`select * from users where apikey = "${header}"`);
+    let userdata;
+    try {
+        userdata = jwt.verify(header, secret);
+    } catch (error) {
+        return res.status(400).send({
+            "msg": "token tidak valid!"
+        });
+    }
+    let search_user = await executeQuery(`select * from users where apikey = "${userdata.apikey}"`);
     if (search_user.length === 0) {
         return res.status(404).send({
             message: "User not found"
@@ -265,8 +274,6 @@ router.post("/hotel/:idTrip", checkUser, async function(req, res){
 
 //add activity to trip [DONE | PERIKSA]
 //kalau city nya ternyata blom ada/diinput di endpoint sebelumnya, maka akan automatis diinputkan
-//yg ini BLOM diperiksa apakah activity nya ini benar ada di city/country yg sesuai
-//APA perlu APIHIT dikurangin 2x kalau nambahain city nya ??
 router.post("/activity/:idTrip", checkUser, async function(req, res){
     console.log(req.body);
     const schema =
@@ -283,7 +290,17 @@ router.post("/activity/:idTrip", checkUser, async function(req, res){
     }
 
     let header = req.header('x-auth-token');
-    let update = doAPIHit(header,1);
+    let userdata;
+    try {
+        userdata = jwt.verify(header, secret);
+    } catch (error) {
+        return res.status(400).send({
+            "msg": "token tidak valid!"
+        });
+    }
+    let apikey = userdata.apikey;
+
+    let update = doAPIHit(apikey,1);
     if (!update) {
         return res.status(401).send({
             message: "Hit quota exceeded"
@@ -292,7 +309,7 @@ router.post("/activity/:idTrip", checkUser, async function(req, res){
 
     let idTrip = Number(req.params.idTrip);
 
-    let user = await executeQuery(`select * from users where apikey = '${header}'`);
+    let user = await executeQuery(`select * from users where apikey = '${a[ikey]}'`);
     let trip = await executeQuery(`select * from route where id = ${idTrip}`);
     if(trip.length<1) {
         return res.status(401).send({
@@ -357,6 +374,70 @@ router.post("/activity/:idTrip", checkUser, async function(req, res){
     }
 })
 
+//get all activity [DONE | PERIKSA]
+router.get("/", checkUser, async function(req, res){
+    let header = req.header('x-auth-token');
+    let userdata;
+    try {
+        userdata = jwt.verify(header, secret);
+    } catch (error) {
+        return res.status(400).send({
+            "msg": "token tidak valid!"
+        });
+    }
+    let apikey = userdata.apikey;
+
+    let update = doAPIHit(apikey,1);
+    if (!update) {
+        return res.status(401).send({
+            message: "Hit quota exceeded"
+        });
+    }
+
+    let user = await executeQuery(`select * from users where apikey = '${apikey}'`);
+
+    try {
+        let getTrip = await executeQuery(`select * from route where user_id = '${user[0].id}' and status != 2`);
+        if (getTrip.length<1) {
+            return res.status(200).send({
+                message: "No Trip From This User",
+            });
+        }
+        let AllTrip = [];
+        for(let i=0; i<getTrip.length;i++) {
+            let AllRoute = [];
+            let getRoute = await executeQuery(`select * from d_route where route_id = '${getTrip[i].id}'`);
+            //return res.status(200).send(getRoute);
+            for(let j=0; j<getRoute.length;j++) {
+                let getHotel = await executeQuery(`select * from d_hotel where droute_id = '${getRoute[j].id}'`);
+                let getActivity = await executeQuery(`select * from d_activity where droute_id = '${getRoute[j].id}'`);
+                let temp = {
+                    "City" : getRoute[i].city_id,
+                    "Country" : getRoute[i].country_id,
+                    "Hotel" : getHotel,
+                    "Activity" : getActivity
+                }
+                AllRoute.push(temp);
+            }
+            AllTrip.push(AllRoute);
+        }
+        let status = "Pending";
+        if(getTrip[0].status === 1) status = "Completed";
+
+        let All = {
+            "User" : user[0].fname + " " + user[0].lname,
+            "Trip_Name" : getTrip[0].route_name,
+            "Trip_Created" : getTrip[0].data_created,
+            "Status" : status,
+            "Trip" : AllTrip
+        }
+        return res.status(200).send(All);
+    } catch (error) {
+        console.log(error);
+        return res.status(500).send(error.toString());
+    }
+})
+
 // tandai trip sudah selesai [PERIKSA]
 router.put("/completeTrip/:id", checkUser, async function(req, res){
     // cek param
@@ -364,6 +445,16 @@ router.put("/completeTrip/:id", checkUser, async function(req, res){
     if (!id) {
         return res.status(400).send("Please provide Trip ID")
     }
+
+    let userdata;
+    try {
+        userdata = jwt.verify(header, secret);
+    } catch (error) {
+        return res.status(400).send({
+            "msg": "token tidak valid!"
+        });
+    }
+    let apikey = userdata.apikey;
 
     // cek apakah id trip ada pada akun user yg nembak
     let user_id = req.header.user_id

@@ -7,6 +7,7 @@ const {
 const multer = require("multer");
 const fs = require("fs");
 const axios = require("axios");
+const jwt = require("jsonwebtoken");
 
 const storage = multer.diskStorage({
     destination: "uploads/",
@@ -43,6 +44,7 @@ const checkUser = async function (req, res, next) {
             message: "Unauthorized!"
         });
     }
+    let userdata;
     try {
         userdata = jwt.verify(header, secret);
     } catch (error) {
@@ -210,7 +212,7 @@ router.post("/login", upload.none(), async function (req, res) {
             })
         }
         let token = jwt.sign({
-            apikey: client_id
+            apikey: users[0].apikey
         }, secret, {
             expiresIn: '3600s'
         });
@@ -346,7 +348,6 @@ router.post("/recharge", [checkUser], async function (req, res) {
     }
 });
 
-
 //melihat subscription yang ada
 router.get("/package", async function (req, res) {
     try {
@@ -442,6 +443,228 @@ router.get("/searchFlight/:airportCode", [checkUser, upload.none()], async funct
         });
     }
 });
+
+// ------------------ HOTEL ------------------
+//search hotel (masukin nama kotanya) [DONE|Perlu diperiksa]
+router.get("/searchHotel", [checkUser, upload.none()], async function (req, res) {
+    let header = req.header("x-auth-token");
+    let update = await executeQuery(`update users set apihit = apihit - 1 where apikey = "${header}"`);
+    if (!update) {
+        return res.status(401).send({
+            message: "Hit quota exceeded"
+        });
+    }
+
+    //return res.status(200).send(req.query)
+
+    let idCity = req.query.idCity.toUpperCase();
+    let countryCode = req.query.countryCode.toUpperCase();
+    if (countryCode.length > 2 || countryCode.length <= 0) {
+        return res.status(402).send({
+            message: "Bad request. Country code must be 2 letters!"
+        });
+    }
+    console.log(`https://test.api.amadeus.com/v1/reference-data/locations/cities?countryCode=${countryCode}&keyword=${idCity}&`);
+    let cityName = await axios.get(
+        `https://test.api.amadeus.com/v1/reference-data/locations/cities?countryCode=${countryCode}&keyword=${idCity}&`, {
+            headers: {
+                'Authorization': key
+            }
+        });
+    console.log(cityName.data.data);
+    let city = cityName.data.data;
+    if (city.length === 0) {
+        return res.status(404).send({
+            message: "No data for city " + idCity
+        });
+    }
+    // return res.status(200).send({message: "ok"});
+
+    let numb = 0;
+    let cityCode = city[numb].iataCode;
+    console.log(city[numb]);
+    console.log("=================");
+    console.log(city[numb].name + " - " + cityCode);
+    console.log("=================");
+
+    try {
+        let hasil = await axios.get(
+            `https://test.api.amadeus.com/v1/reference-data/locations/hotels/by-city?cityCode=${cityCode}`, {
+                headers: {
+                    'Authorization': key
+                }
+            })
+        let data = hasil.data.data;
+        //console.log(data);
+
+        let size = 10;
+        if (data.length < 10) size = data.length;
+
+        //console.log(size)
+
+        let hotel = [];
+        for (let i = 0; i < size; i++) {
+            let rate = 5;
+            let review = await executeQuery(`select AVG(review_score) as rate from review where hotel_id = '${data[i].hotelId}'`);
+            if (review.length > 0) rate = review[0].rate;
+            console.log(data[i]);
+            let temp = {
+                "name": data[i].name,
+                "hotelId": data[i].hotelId,
+                "iataCode": data[i].iataCode,
+                "rate": rate
+            }
+            hotel.push(temp);
+        }
+
+        return res.status(200).send({
+            body: {
+                "count": data.length,
+                "hotel": hotel
+            }
+        });
+    } catch (error) {
+        console.log(error);
+        return res.status(400).send({
+            message: "Internal error!"
+        });
+    }
+});
+
+//post & update review hotel [DONE]
+router.post("/reviewHotel", [checkUser, upload.none()], async function (req, res) {
+    let user_id = req.header.user_id
+    // validasi body
+    const body = req.body;
+    const schema = Joi.object({
+        hotel_id: Joi.string().external(checkHotelId).required(),
+        review_content: Joi.string().required(),
+        review_score: Joi.number().min(1).max(5).required(),
+    });
+    let hotel
+    try {
+        await schema.validateAsync(body);
+        hotel = await getHotel(body.hotel_id)
+    } catch (error) {
+        return res.status(400).send(error.toString());
+    }
+
+
+    // cek apakah user sudah pernah review hotel yang sama sebelumnya
+    // kalau sudah ada, maka review lama akan di update
+    // kalau belum ada, review baru akan ditambahkan
+    let query = `select * from review where hotel_id='${body.hotel_id}' and user_id='${user_id}'`
+    let review = await executeQuery(query)
+    review = review[0]
+    let status, message
+    if (!review) {
+        query = `
+            insert into review(hotel_id, hotel_name, user_id, review_content, review_score)
+            values('${body.hotel_id}','${hotel.name}', ${user_id}, '${body.review_content}', ${body.review_score})
+        `
+        status = 201
+        message = 'Review added!'
+    } else {
+        query = `
+            update review 
+            set review_content='${body.review_content}', review_score=${body.review_score} 
+            where hotel_id='${body.hotel_id}' and user_id=${user_id}
+        `
+        status = 200
+        message = 'Review updated!'
+    }
+    let result = await executeQuery(query);
+
+    if (result) {
+        return res.status(status).send({
+            message
+        })
+    } else {
+        return res.status(500).send('Server error occured')
+    }
+});
+
+//cari review hotel [PERIKSA]
+router.get("/reviewHotel/:idHotel?", [checkUser], async function (req, res) {
+    if (!req.params.idHotel) {
+        let data = await executeQuery(`select hotel_name as "Hotel Name", AVG(review_score) as "Rating"  from review group by hotel_id`);
+        return res.status(200).send(data)
+    } else {
+        let idHotel = req.params.idHotel.toUpperCase();
+        try {
+            let hotel = await getHotel(idHotel);
+            let data = await executeQuery(`select user_id as "User ID",review_content as "Review",review_score as "Rating" from review where hotel_id = '${idHotel}'`);
+            let jum = 0
+            let tot = 0
+            data.forEach(ah => {
+                tot += ah.Rating
+                jum++
+            });
+            return res.status(200).send({
+                "Hotel Name": hotel.name,
+                "Review Amount": jum,
+                "Average Rating": tot / jum,
+                "Reviews": data
+            })
+        } catch (error) {
+            return res.status(404).send("Hotel not found");
+        }
+    }
+});
+
+// search activities berdasarkan nama tempat [PERIKSA]
+router.get("/searchActivities/:location", [checkUser, upload.none()], async function (req, res) {
+    // cek param
+    let location = req.params.location
+    if (!location) {
+        return res.status(400).send("Please provide location")
+    }
+
+    try {
+        // pake third party api gratis, ga perlu register :v
+        let coordinates = await axios.get(`https://www.gps-coordinates.net/api/${location}`);
+        console.log(coordinates.data)
+        if (coordinates.data.responseCode === "400") {
+            return res.status(404).send("Invalid location")
+        }
+
+        // nembak activities api dari amadeus
+        let latitude = coordinates.data.latitude
+        let longitude = coordinates.data.longitude
+        let radius = 1 // radius pencarian dalam KM
+        let activities = await axios.get(
+            `https://test.api.amadeus.com/v1/shopping/activities?latitude=${latitude}&longitude=${longitude}&radius=${radius}`, {
+                headers: {
+                    'Authorization': key
+                }
+            }
+        );
+
+        // cek result data
+        activities = activities.data.data
+        if (activities.length === 0) {
+            return res.status(404).send(`No activities found in ${location}`)
+        }
+
+        // filter data
+        let activities_list = [];
+        for (let i = 0; i < activities.length; i++) {
+            let temp = {
+                "id": activities[i].id,
+                "name": activities[i].name,
+                "shortDescription": activities[i].shortDescription,
+                "rating": activities[i].rating,
+                "pictures": activities[i].pictures,
+            }
+            activities_list.push(temp);
+        }
+        return res.status(200).send(activities_list)
+    } catch (error) {
+        return res.status(500).send(error.toString())
+    }
+})
+
+module.exports = router;
 
 //flight options [PERIKSA]
 // router.get("/optionsFlight/", [checkUser, upload.none()], async function (req, res) {
@@ -566,167 +789,6 @@ router.get("/searchFlight/:airportCode", [checkUser, upload.none()], async funct
 //     let departure = data.itineraries.segments.departure;
 // })
 
-// ------------------ HOTEL ------------------
-//search hotel (masukin nama kotanya) [DONE|Perlu diperiksa]
-router.get("/searchHotel", [checkUser, upload.none()], async function (req, res) {
-    let header = req.header("x-auth-token");
-    let update = await executeQuery(`update users set apihit = apihit - 1 where apikey = "${header}"`);
-    if (!update) {
-        return res.status(401).send({
-            message: "Hit quota exceeded"
-        });
-    }
-
-    //return res.status(200).send(req.query)
-
-    let idCity = req.query.idCity.toUpperCase();
-    let countryCode = req.query.countryCode.toUpperCase();
-    if (countryCode.length > 2 || countryCode.length <= 0) {
-        return res.status(402).send({
-            message: "Bad request. Country code must be 2 letters!"
-        });
-    }
-    console.log(`https://test.api.amadeus.com/v1/reference-data/locations/cities?countryCode=${countryCode}&keyword=${idCity}&`);
-    let cityName = await axios.get(
-        `https://test.api.amadeus.com/v1/reference-data/locations/cities?countryCode=${countryCode}&keyword=${idCity}&`, {
-            headers: {
-                'Authorization': key
-            }
-        });
-    console.log(cityName.data.data);
-    let city = cityName.data.data;
-    if (city.length === 0) {
-        return res.status(404).send({
-            message: "No data for city " + idCity
-        });
-    }
-    // return res.status(200).send({message: "ok"});
-
-    let numb = 0;
-    // for (let i = 0; i < city.length; i++) {
-    //     if (city[i].name.includes(idCity)){
-    //         numb = i;
-    //         break;
-    //     }
-    // }
-    let cityCode = city[numb].iataCode;
-    console.log(city[numb]);
-    console.log("=================");
-    console.log(city[numb].name + " - " + cityCode);
-    console.log("=================");
-    // return res.status(200).send({
-    //     "name": city[numb].name,
-    //     "cityCode" : city[numb].address.cityCode,
-    // })
-
-    try {
-        let hasil = await axios.get(
-            `https://test.api.amadeus.com/v1/reference-data/locations/hotels/by-city?cityCode=${cityCode}`, {
-                headers: {
-                    'Authorization': key
-                }
-            })
-        let data = hasil.data.data;
-        //console.log(data);
-
-        let size = 10;
-        if (data.length < 10) size = data.length;
-
-        //console.log(size)
-
-        let hotel = [];
-        for (let i = 0; i < size; i++) {
-            // let rate = await axios.get(
-            //     `https://test.api.amadeus.com/v2/e-reputation/hotel-sentiments?hotelIds=${data[i].hotelId}`,
-            //     {
-            //         headers: {
-            //             'Authorization': key
-            //         }
-            //     })
-
-            //let rating = rate.data.data;
-            //return res.status(200).send(rating);
-
-            let rate = 5;
-            let review = await executeQuery(`select AVG(review_score) as rate from review where hotel_id = '${data[i].hotelId}'`);
-            if (review.length > 0) rate = review[0].rate;
-            console.log(data[i]);
-            let temp = {
-                "name": data[i].name,
-                "hotelId": data[i].hotelId,
-                "iataCode": data[i].iataCode,
-                "rate": rate
-            }
-            hotel.push(temp);
-        }
-
-        return res.status(200).send({
-            body: {
-                "count": data.length,
-                "hotel": hotel
-            }
-        });
-    } catch (error) {
-        console.log(error);
-        return res.status(400).send({
-            message: "Internal error!"
-        });
-    }
-});
-
-//post & update review hotel [DONE]
-router.post("/reviewHotel", [checkUser, upload.none()], async function (req, res) {
-    let user_id = req.header.user_id
-    // validasi body
-    const body = req.body;
-    const schema = Joi.object({
-        hotel_id: Joi.string().external(checkHotelId).required(),
-        review_content: Joi.string().required(),
-        review_score: Joi.number().min(1).max(5).required(),
-    });
-    let hotel
-    try {
-        await schema.validateAsync(body);
-        hotel = await getHotel(body.hotel_id)
-    } catch (error) {
-        return res.status(400).send(error.toString());
-    }
-
-
-    // cek apakah user sudah pernah review hotel yang sama sebelumnya
-    // kalau sudah ada, maka review lama akan di update
-    // kalau belum ada, review baru akan ditambahkan
-    let query = `select * from review where hotel_id='${body.hotel_id}' and user_id='${user_id}'`
-    let review = await executeQuery(query)
-    review = review[0]
-    let status, message
-    if (!review) {
-        query = `
-            insert into review(hotel_id, hotel_name, user_id, review_content, review_score)
-            values('${body.hotel_id}','${hotel.name}', ${user_id}, '${body.review_content}', ${body.review_score})
-        `
-        status = 201
-        message = 'Review added!'
-    } else {
-        query = `
-            update review 
-            set review_content='${body.review_content}', review_score=${body.review_score} 
-            where hotel_id='${body.hotel_id}' and user_id=${user_id}
-        `
-        status = 200
-        message = 'Review updated!'
-    }
-    let result = await executeQuery(query);
-
-    if (result) {
-        return res.status(status).send({
-            message
-        })
-    } else {
-        return res.status(500).send('Server error occured')
-    }
-});
-
 // // hotel options  [BELUM]
 // router.get("/optionsHotel", [checkUser,upload.none()], async function (req, res){
 //     const body = req.body;
@@ -771,85 +833,3 @@ router.post("/reviewHotel", [checkUser, upload.none()], async function (req, res
 //     }
 //     return res.send("done")
 // });
-
-//cari review hotel [PERIKSA]
-router.get("/reviewHotel/:idHotel?", [checkUser], async function (req, res) {
-    if (!req.params.idHotel) {
-        let data = await executeQuery(`select hotel_name as "Hotel Name", AVG(review_score) as "Rating"  from review group by hotel_id`);
-        return res.status(200).send(data)
-    } else {
-        let idHotel = req.params.idHotel.toUpperCase();
-        try {
-            let hotel = await getHotel(idHotel);
-            let data = await executeQuery(`select user_id as "User ID",review_content as "Review",review_score as "Rating" from review where hotel_id = '${idHotel}'`);
-            let jum = 0
-            let tot = 0
-            data.forEach(ah => {
-                tot += ah.Rating
-                jum++
-            });
-            return res.status(200).send({
-                "Hotel Name": hotel.name,
-                "Review Amount": jum,
-                "Average Rating": tot / jum,
-                "Reviews": data
-            })
-        } catch (error) {
-            return res.status(404).send("Hotel not found");
-        }
-    }
-});
-
-// search activities berdasarkan nama tempat [PERIKSA]
-router.get("/searchActivities/:location", [checkUser, upload.none()], async function (req, res) {
-    // cek param
-    let location = req.params.location
-    if (!location) {
-        return res.status(400).send("Please provide location")
-    }
-
-    try {
-        // pake third party api gratis, ga perlu register :v
-        let coordinates = await axios.get(`https://www.gps-coordinates.net/api/${location}`);
-        console.log(coordinates.data)
-        if (coordinates.data.responseCode === "400") {
-            return res.status(404).send("Invalid location")
-        }
-
-        // nembak activities api dari amadeus
-        let latitude = coordinates.data.latitude
-        let longitude = coordinates.data.longitude
-        let radius = 1 // radius pencarian dalam KM
-        let activities = await axios.get(
-            `https://test.api.amadeus.com/v1/shopping/activities?latitude=${latitude}&longitude=${longitude}&radius=${radius}`, {
-                headers: {
-                    'Authorization': key
-                }
-            }
-        );
-
-        // cek result data
-        activities = activities.data.data
-        if (activities.length == 0) {
-            return res.status(404).send(`No activities found in ${location}`)
-        }
-
-        // filter data
-        let activities_list = [];
-        for (let i = 0; i < activities.length; i++) {
-            let temp = {
-                "id": activities[i].id,
-                "name": activities[i].name,
-                "shortDescription": activities[i].shortDescription,
-                "rating": activities[i].rating,
-                "pictures": activities[i].pictures,
-            }
-            activities_list.push(temp);
-        }
-        return res.status(200).send(activities_list)
-    } catch (error) {
-        return res.status(500).send(error.toString())
-    }
-})
-
-module.exports = router;
