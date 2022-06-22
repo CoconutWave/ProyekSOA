@@ -23,7 +23,7 @@ const upload = multer({
 
 // ------------------ VAR ------------------
 const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-const key = "Bearer PaRWYGTHyIyeqABCwfBrdoco9vYG"; //aku ganti punyaku
+const key = "Bearer 81gCLvNZnYXIoaj0hWECPf62sa9b"; //aku ganti punyaku
 
 // ------------------ FUNCTION ------------------
 const generateUniqueApikey = (length) => {
@@ -706,5 +706,57 @@ router.get("/reviewHotel/:idHotel?", [checkUser], async function (req, res) {
     }
 });
 
+// search activities [PERIKSA]
+router.get("/searchActivities/:location", [checkUser, upload.none()], async function (req, res){
+    // cek param
+    let location = req.params.location
+    if (!location){
+        return res.status(400).send("Please provide location")
+    }
+
+    try {
+        // pake third party api gratis, ga perlu register :v
+        let coordinates = await axios.get(`https://www.gps-coordinates.net/api/${location}`);
+        console.log(coordinates.data)
+        if (coordinates.data.responseCode == "400"){
+            return res.status(404).send("Invalid location")
+        }
+
+        // nembak activities api dari amadeus
+        let latitude = coordinates.data.latitude
+        let longitude = coordinates.data.longitude
+        let radius = 1 // radius pencarian dalam KM
+        let activities = await axios.get(
+            `https://test.api.amadeus.com/v1/shopping/activities?latitude=${latitude}&longitude=${longitude}&radius=${radius}`, {
+                headers: {
+                    'Authorization': key
+                }
+            }
+        );
+
+        // cek result data
+        activities = activities.data.data
+        if (activities.length == 0){
+            return res.status(404).send(`No activities found in ${location}`)
+        }
+
+        // filter data
+        let activities_list = [];
+        for (let i = 0; i < activities.length; i++) {
+            let temp = {
+                "id"                : activities[i].id,
+                "name"              : activities[i].name,
+                "shortDescription"  : activities[i].shortDescription,
+                "rating"            : activities[i].rating,
+                "pictures"          : activities[i].pictures,
+            }
+            activities_list.push(temp);
+        }
+        return res.status(200).send(activities_list)
+    }
+    catch (error) {
+        return res.status(500).send(error.toString())
+    }
+})
 
 module.exports = router;
