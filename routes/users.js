@@ -560,8 +560,8 @@ router.get("/searchHotel", [checkUser, upload.none()], async function (req, res)
             let temp = {
                 "name": data[i].name,
                 "hotelId": data[i].hotelId,
-                "iataCode": data[i].iataCode
-                
+                "iataCode": data[i].iataCode,
+                "rate": rate
             }
             hotel.push(temp);
         }
@@ -706,7 +706,6 @@ router.get("/reviewHotel/:idHotel?", [checkUser], async function (req, res) {
     }
 });
 
-// search activities [PERIKSA]
 router.get("/searchActivities/:location", [checkUser, upload.none()], async function (req, res){
     // cek param
     let location = req.params.location
@@ -718,7 +717,7 @@ router.get("/searchActivities/:location", [checkUser, upload.none()], async func
         // pake third party api gratis, ga perlu register :v
         let coordinates = await axios.get(`https://www.gps-coordinates.net/api/${location}`);
         console.log(coordinates.data)
-        if (coordinates.data.responseCode == "400"){
+        if (coordinates.data.responseCode === "400"){
             return res.status(404).send("Invalid location")
         }
 

@@ -30,6 +30,41 @@ client_id` varchar(50) NOT NULL,
 
 /*Data for the table `access_log` */
 
+/*Table structure for table `d_activity` */
+
+DROP TABLE IF EXISTS `d_activity`;
+
+CREATE TABLE `d_activity` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `droute_id` int(11) NOT NULL,
+  `activity_id` varchar(15) NOT NULL,
+  `activity_name` varchar(15) NOT NULL,
+  `activity_category` varchar(15) NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4;
+
+/*Data for the table `d_activity` */
+
+insert  into `d_activity`(`id`,`droute_id`,`activity_id`,`activity_name`,`activity_category`) values 
+(1,8,'9CB40CB5D0','Casa Batlló','SIGHTS');
+
+/*Table structure for table `d_hotel` */
+
+DROP TABLE IF EXISTS `d_hotel`;
+
+CREATE TABLE `d_hotel` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `droute_id` int(11) NOT NULL,
+  `hotel_id` varchar(15) NOT NULL,
+  `hotel_name` varchar(50) NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4;
+
+/*Data for the table `d_hotel` */
+
+insert  into `d_hotel`(`id`,`droute_id`,`hotel_id`,`hotel_name`) values 
+(1,8,'HLLON101','THE TRAFALGAR');
+
 /*Table structure for table `d_route` */
 
 DROP TABLE IF EXISTS `d_route`;
@@ -40,7 +75,7 @@ CREATE TABLE `d_route` (
   `city_id` varchar(5) NOT NULL,
   `country_id` varchar(5) NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB AUTO_INCREMENT=10 DEFAULT CHARSET=utf8mb4;
 
 /*Data for the table `d_route` */
 
@@ -51,7 +86,9 @@ insert  into `d_route`(`id`,`route_id`,`city_id`,`country_id`) values
 (4,2,'SRG',''),
 (5,2,'BDO',''),
 (6,2,'JOG',''),
-(7,3,'PAR','FR');
+(7,3,'PAR','FR'),
+(8,3,'LON','GB'),
+(9,3,'LON','BG');
 
 /*Table structure for table `developer_account` */
 

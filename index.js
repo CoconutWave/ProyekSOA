@@ -10,7 +10,6 @@ const trip = require("./routes/trip");
 app.use(express.urlencoded({extended: true}));
 
 /*
-
 219116852 - Indah Cahyani Styoningrum
 219116856 - Lukky Hariyanto
 219116858 - Ray Vitto Nugroho

@@ -82,7 +82,7 @@ router.post("/login", async function (req, res) {
 
     console.log(req.body);
 
-    let cek = `select * from developer_account where client_id = '${client_id}'`; //and client_secret = '${client_secret}
+    let cek = `select * from developer_account where client_id = '${client_id}' and client_secret = '${client_secret}'`;
     let hasilCek = await executeQuery(cek);
 
     if(hasilCek.length < 1) return res.status(400).send({"msg":"client id atau secret salah!"});
