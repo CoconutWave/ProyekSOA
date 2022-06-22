@@ -8,6 +8,7 @@ const multer = require("multer");
 const fs = require("fs");
 const axios = require("axios");
 const jwt = require("jsonwebtoken");
+const secret = "proyeksoauserbagian";
 
 const storage = multer.diskStorage({
     destination: "uploads/",
@@ -15,7 +16,14 @@ const storage = multer.diskStorage({
         // let date = new Date();
         // console.log(date.toString());
         const extension = file.originalname.split('.')[file.originalname.split('.').length - 1];
-        cb(null, req.header("x-auth-token") + "." + extension);
+        let apikey;
+        try {
+            apikey = jwt.verify(req.header("x-auth-token"), secret);
+        } catch (error) {
+            console.log(error);
+            return res.status(403).send({message: "Token expired"});
+        }
+        cb(null, apikey.apikey + "." + extension);
     }
 });
 const upload = multer({
@@ -24,8 +32,8 @@ const upload = multer({
 
 // ------------------ VAR ------------------
 const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-const key = "Bearer 81gCLvNZnYXIoaj0hWECPf62sa9b"; //aku ganti punyaku
-const secret = "proyeksoauserbagian";
+const key = "Bearer AehwZVqMtmQtrfmCcKSmPqDS71pu"; //aku ganti punyaku
+
 
 // ------------------ FUNCTION ------------------
 const generateUniqueApikey = (length) => {
@@ -71,12 +79,16 @@ const checkUser = async function (req, res, next) {
 }
 
 async function doAPIHit(user_id, apihit_amount) {
+    console.log(user_id);
     let search_user = await executeQuery(`select * from users where apikey = "${user_id}"`);
+    if(search_user.length <= 0){
+        return false;
+    }
     if (search_user[0].apihit < apihit_amount) {
-        return false
+        return false;
     } else {
         await executeQuery(`update users set apihit = apihit - ${apihit_amount} where apikey = "${user_id}"`)
-        return true
+        return true;
     }
 }
 
@@ -119,7 +131,7 @@ router.post("/register", upload.none(), async function (req, res) {
             email: Joi.string().email({
                 minDomainSegments: 2
             }).required(),
-            password: Joi.string().required(),
+            password: Joi.string().min(8).required(),
             confirm_password: Joi.string().required(),
             date_of_birth: Joi.date().format('DD/MM/YYYY').required(),
         })
@@ -163,8 +175,8 @@ router.post("/register", upload.none(), async function (req, res) {
         } while (check_api.length > 0);
 
         let insert_user = await executeQuery(`insert into users
-            values('',"${apikey}", 5, "${email}", "${fname}",0, "${lname}", "${password}", STR_TO_DATE("${date_of_birth}", "%d/%m/%YYYY"),
-            NOW(), NOW(), 1)`);
+            values('',"${apikey}", 5, "${email}", "${fname}", "${lname}", "${password}", STR_TO_DATE("${date_of_birth}", "%d/%m/%YYYY"),
+            NOW(), NOW(), 1,'')`);
         if (insert_user) {
             return res.status(200).send({
                 message: "Registered successfully!",
@@ -277,31 +289,46 @@ router.put("/update", [checkUser, upload.none()], async function (req, res) {
 });
 
 //update photo-user [DONE, need testing]
-router.put("/updatePhoto", [checkUser, upload.single("IDCard")], async function (req, res) {
+router.put("/updatePhoto", [upload.single("IDCard")], async function (req, res) {
     let header = req.header('x-auth-token');
-    req.body.ktpapikey = header;
+    try {
+        header = jwt.verify(header, secret);
+    } catch (error) {
+        console.log(error);
+        return res.status(400).send({
+            "msg": "token tidak valid!"
+        });
+    }
+    req.body.ktpapikey = header.apikey;
+    let apikey = header.apikey;
     let user;
     try {
-        user = await executeQuery(`select id, apikey, id_card_dir 
+        user = await executeQuery(`select id, apikey, id_card_dir, is_active 
         from users 
-        where apikey = '${header}'
-        and is_active = 1`);
+        where apikey = '${apikey}'`);
     } catch (error) {
         console.log(error);
         return res.status(500).send({
             message: "Internal error!"
         });
     }
-
+    const extension = req.file.originalname.split('.')[req.file.originalname.split('.').length - 1];
+    console.log(user.length);
     if (user.length === 0) {
-        fs.unlinkSync(`/uploads/${header}`);
+        fs.unlinkSync(`./uploads/${apikey}`+"."+extension);
         return res.status(404).send({
             message: "User not found!"
         });
     }
+    if(user[0].is_active === 0){
+        return res.status(404).send({
+            message: "User deleted!"
+        });
+    }
 
     try {
-        let update_user = await executeQuery(`update users set id_card_dir = "/uploads/${header}" where id = ${user[0].id}`);
+        fs.unlinkSync(user[0].id_card_dir);
+        let update_user = await executeQuery(`update users set id_card_dir = "./uploads/${apikey}.${extension}" where id = ${user[0].id}`);
         let message = "ID Card photo successfully updated";
         // console.log(user[0].id_card_dir);
         if (user[0].id_card_dir == null) {
@@ -310,7 +337,7 @@ router.put("/updatePhoto", [checkUser, upload.single("IDCard")], async function 
         return res.status(200).send({
             message: message,
             API_key: user[0].apikey,
-            id_card_directory: "/uploads/" + header
+            id_card_directory: `./uploads/${apikey}.${extension}`
         });
     } catch (error) {
         console.log(error);
@@ -448,14 +475,20 @@ router.get("/searchFlight/:airportCode", [checkUser, upload.none()], async funct
 //search hotel (masukin nama kotanya) [DONE|Perlu diperiksa]
 router.get("/searchHotel", [checkUser, upload.none()], async function (req, res) {
     let header = req.header("x-auth-token");
-    let update = await executeQuery(`update users set apihit = apihit - 1 where apikey = "${header}"`);
-    if (!update) {
-        return res.status(401).send({
-            message: "Hit quota exceeded"
-        });
-    }
+    
+    // let update = await executeQuery(`update users set apihit = apihit - 1 where apikey = "${header}"`);
+    // if (!update) {
+    //     return res.status(401).send({
+    //         message: "Hit quota exceeded"
+    //     });
+    // }
 
     //return res.status(200).send(req.query)
+    let update = await doAPIHit(req.header.apikey, 1);
+    console.log(update);
+    if(!update){
+        return res.status(401).send({message: "Hit quota limit reached"});
+    }
 
     let idCity = req.query.idCity.toUpperCase();
     let countryCode = req.query.countryCode.toUpperCase();
@@ -471,7 +504,7 @@ router.get("/searchHotel", [checkUser, upload.none()], async function (req, res)
                 'Authorization': key
             }
         });
-    console.log(cityName.data.data);
+    // console.log(cityName.data.data);
     let city = cityName.data.data;
     if (city.length === 0) {
         return res.status(404).send({
@@ -482,7 +515,7 @@ router.get("/searchHotel", [checkUser, upload.none()], async function (req, res)
 
     let numb = 0;
     let cityCode = city[numb].iataCode;
-    console.log(city[numb]);
+    // console.log(city[numb]);
     console.log("=================");
     console.log(city[numb].name + " - " + cityCode);
     console.log("=================");
