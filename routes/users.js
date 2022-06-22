@@ -787,6 +787,7 @@ router.get("/reviewHotel/:idHotel?", [checkUser], async function (req, res) {
     }
 });
 
+// search activities berdasarkan nama tempat [PERIKSA]
 router.get("/searchActivities/:location", [checkUser, upload.none()], async function (req, res) {
     // cek param
     let location = req.params.location

@@ -60,7 +60,7 @@ router.post("/", checkUser, async function (req, res) {
     }
 
     let route_name = req.body.route_name;
-    let query = `select * from route where user_id='${req.header.user_id}' and route_name='${route_name}'`
+    let query = `select * from route where user_id='${req.header.user_id}' and route_name='${route_name}' and status!=2`
     let review = await executeQuery(query)
     if (review.length > 0){
         return res.status(400).send(`Trip ${route_name} is already exist!`)
@@ -357,5 +357,116 @@ router.post("/activity/:idTrip", checkUser, async function(req, res){
     }
 })
 
+// tandai trip sudah selesai [PERIKSA]
+router.put("/completeTrip/:id", checkUser, async function(req, res){
+    // cek param
+    let id = req.params.id
+    if (!id) {
+        return res.status(400).send("Please provide Trip ID")
+    }
+
+    // cek apakah id trip ada pada akun user yg nembak
+    let user_id = req.header.user_id
+    let query = `select * from route where user_id='${user_id}' and id='${id}' and status=0`
+    let route = await executeQuery(query)
+    route = route[0]
+    if (!route){
+        return res.status(404).send(`Trip not found`)
+    }
+
+    // update status
+    query = `
+        update route
+        set status=1
+        where user_id='${user_id}' and id='${id}'
+    `
+    let result = await executeQuery(query)
+    if (result) {
+        return res.status(200).send(`Trip ${route.route_name} has been marked as Complete`)
+    }
+    else {
+        return res.status(500).send('Server error occured')
+    }
+})
+
+// edit nama trip [PERIKSA]
+router.put("/editTrip/:id", checkUser, async function(req, res){
+    // cek param
+    let id = req.params.id
+    if (!id) {
+        return res.status(400).send("Please provide Trip ID")
+    }
+
+    // cek body & nama kembar
+    let user_id = req.header.user_id
+    let new_name = req.body.new_name
+    if (!new_name){
+        return res.status(400).send("Please provide new name for the Trip")
+    }
+    let query = `select * from route where user_id='${user_id}' and route_name='${new_name}' and status!=2`
+    let route = await executeQuery(query)
+    if (route.length > 0){
+        return res.status(400).send(`Trip ${new_name} is already exist!`)
+    }
+
+    // cek apakah id trip ada pada akun user yg nembak
+    query = `select * from route where user_id='${user_id}' and id='${id}' and status!=2`
+    route = await executeQuery(query)
+    route = route[0]
+    if (!route){
+        return res.status(404).send(`Trip not found`)
+    }
+
+    // update nama trip
+    query = `
+        update route
+        set route_name='${new_name}'
+        where user_id='${user_id}' and id='${id}'
+    `
+    let result = await executeQuery(query)
+    if (result) {
+        return res.status(200).send({
+            message: "Trip name successfully changed!",
+            old_name: route.route_name,
+            new_name
+        })
+    }
+    else {
+        return res.status(500).send('Server error occured')
+    }
+})
+
+// delete trip berdasarkan id [PERIKSA]
+router.delete("/deleteTrip/:id", checkUser, async function(req, res){
+    // cek param
+    let id = req.params.id
+    if (!id) {
+        return res.status(400).send("Please provide Trip ID")
+    }
+
+    // cek apakah id trip ada pada akun user yg nembak
+    let user_id = req.header.user_id
+    let query = `select * from route where user_id='${user_id}' and id='${id}' and status!=2`
+    let route = await executeQuery(query)
+    route = route[0]
+    console.log(route)
+    if (!route){
+        return res.status(404).send(`Trip not found`)
+    }
+
+    // update status
+    query = `
+        update route
+        set status=2
+        where user_id='${user_id}' and id='${id}'
+    `
+    let result = await executeQuery(query)
+    if (result) {
+        return res.status(200).send(`Trip ${route.route_name} deleted successfully`)
+    }
+    else {
+        return res.status(500).send('Server error occured')
+    }
+})
 
 module.exports = router;
