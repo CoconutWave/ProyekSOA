@@ -59,16 +59,22 @@ router.post("/", checkUser, async function (req, res) {
         return res.status(403).send(error.toString());
     }
 
+    let route_name = req.body.route_name;
+    let query = `select * from route where user_id='${req.header.user_id}' and route_name='${route_name}'`
+    let review = await executeQuery(query)
+    if (review.length > 0){
+        return res.status(400).send(`Trip ${route_name} is already exist!`)
+    }
+
     let header = req.header('x-auth-token');
     let update = doAPIHit(header,1);
     if (!update) {
         return res.status(401).send({
-            message: "Apihit tidak mencukupi"
+            message: "Hit quota exceeded"
         });
     }
 
     let user = await executeQuery(`select * from users where apikey = '${header}'`);
-    let route_name = req.body.route_name;
 
     try {
         let insert = await executeQuery(`insert into route
@@ -105,7 +111,7 @@ router.post("/city/:idTrip", checkUser, async function(req, res){
     let update = doAPIHit(header,1);
     if (!update) {
         return res.status(401).send({
-            message: "Apihit tidak mencukupi"
+            message: "Hit quota exceeded"
         });
     }
 
@@ -180,7 +186,7 @@ router.post("/hotel/:idTrip", checkUser, async function(req, res){
     let update = doAPIHit(header,1);
     if (!update) {
         return res.status(401).send({
-            message: "Apihit tidak mencukupi"
+            message: "Hit quota exceeded"
         });
     }
 
@@ -280,7 +286,7 @@ router.post("/activity/:idTrip", checkUser, async function(req, res){
     let update = doAPIHit(header,1);
     if (!update) {
         return res.status(401).send({
-            message: "Apihit tidak mencukupi"
+            message: "Hit quota exceeded"
         });
     }
 

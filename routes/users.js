@@ -130,7 +130,7 @@ router.post("/register", upload.none(), async function (req, res) {
     let apikey;
 
     if (password !== confirm_password) {
-        return res.status(200).send({
+        return res.status(400).send({
             message: "Password don't match!"
         });
     }
@@ -193,18 +193,16 @@ router.post("/login", upload.none(), async function (req, res) {
         const users = await executeQuery(`select * from users where email = '${email}'`);
         if (users.length < 1) {
             return res.status(404).send({
-                "status": 404,
                 "message": "User not found"
             })
         }
         if (users[0].password !== password) {
             return res.status(400).send({
-                "status": 400,
-                "message": "Password tidak benar"
+                "message": "Invalid Password"
             })
         }
         return res.status(200).send({
-            message: "Berhasil login!",
+            message: "Login Success!",
             api_key: users[0].apikey
         })
 
@@ -251,7 +249,7 @@ router.put("/update", [checkUser, upload.none()], async function (req, res) {
             and is_active = 1`);
 
     if (update) {
-        return res.status(400).send({
+        return res.status(200).send({
             "message": "Successfully updated",
         })
     } else {
@@ -308,7 +306,7 @@ router.get("/searchFlight/:airportCode", [checkUser, upload.none()], async funct
     let update = doAPIHit(header,1);
     if (!update) {
         return res.status(401).send({
-            message: "Apihit tidak mencukupi"
+            message: "Hit quota exceeded"
         });
     }
     if (req.params.airportCode) {
@@ -483,7 +481,7 @@ router.get("/searchHotel", [checkUser, upload.none()], async function (req, res)
     let update = await executeQuery(`update users set apihit = apihit - 1 where apikey = "${header}"`);
     if (!update) {
         return res.status(401).send({
-            message: "Apihit tidak mencukupi"
+            message: "Hit quota exceeded"
         });
     }
 
