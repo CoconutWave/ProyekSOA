@@ -1,6 +1,6 @@
 /*
-SQLyog Community v13.1.9 (64 bit)
-MySQL - 10.4.22-MariaDB : Database - soaproject_hotel_flight
+SQLyog Community v13.1.7 (64 bit)
+MySQL - 10.4.20-MariaDB : Database - soaproject_hotel_flight
 *********************************************************************
 */
 
@@ -29,6 +29,25 @@ client_id` varchar(50) NOT NULL,
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 /*Data for the table `access_log` */
+
+/*Table structure for table `d_route` */
+
+DROP TABLE IF EXISTS `d_route`;
+
+CREATE TABLE `d_route` (
+  `route_id` int(11) NOT NULL,
+  `city_id` varchar(5) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+/*Data for the table `d_route` */
+
+insert  into `d_route`(`route_id`,`city_id`) values 
+(1,'LON'),
+(1,'PAR'),
+(2,'SUB'),
+(2,'SRG'),
+(2,'BDO'),
+(2,'JOG');
 
 /*Table structure for table `developer_account` */
 
@@ -108,6 +127,24 @@ CREATE TABLE `review` (
 insert  into `review`(`hotel_id`,`hotel_name`,`user_id`,`review_content`,`review_score`,`review_date`) values 
 ('AZJKT134','ASCOTT JAKARTA',1,'Sangat bagus interior dan servicenya',5,'2022-06-20 16:44:28');
 
+/*Table structure for table `route` */
+
+DROP TABLE IF EXISTS `route`;
+
+CREATE TABLE `route` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `user_id` int(11) NOT NULL,
+  `route_name` varchar(20) NOT NULL,
+  `date_created` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4;
+
+/*Data for the table `route` */
+
+insert  into `route`(`id`,`user_id`,`route_name`,`date_created`) values 
+(1,2,'Vacation with bestie','2022-06-22 09:35:30'),
+(2,3,'Research Trip','2022-06-22 09:36:00');
+
 /*Table structure for table `subscription_plan` */
 
 DROP TABLE IF EXISTS `subscription_plan`;
@@ -153,7 +190,7 @@ CREATE TABLE `users` (
 /*Data for the table `users` */
 
 insert  into `users`(`id`,`apikey`,`apihit`,`email`,`fname`,`lname`,`password`,`date_of_birth`,`date_registered`,`date_updated`,`is_active`,`id_card_dir`) values 
-(1,'BAs3XiTqng',-22,'gareth05@mail.com','Gareth','Newman','asdfasdf','1994-08-07 00:00:00','2022-05-06 10:04:26','2022-05-06 10:04:26',1,'/uploads/BAs3XiTqng'),
+(1,'BAs3XiTqng',-32,'gareth05@mail.com','Gareth','Newman','asdfasdf','1994-08-07 00:00:00','2022-05-06 10:04:26','2022-05-06 10:04:26',1,'/uploads/BAs3XiTqng'),
 (2,'yDx4YM74IJ',5,'jayjay.max@mail.com','Jeremy','Kazimir','asdfasdf','2022-05-26 16:05:41','2022-05-26 15:52:49','2022-05-26 16:05:41',1,'/uploads/yDx4YM74IJ'),
 (3,'kJFjFArT5o',5,'Mar.see@mail.com','Marceline','Smith','nintendo','2000-10-07 00:00:00','2022-06-11 20:40:19','2022-06-11 21:26:28',1,'/uploads/kJFjFArT5o'),
 (4,'VMIHfwZqTm',5,'KatieHughes123@mail.com','Katie','Hughes','abcd1234','1999-10-19 00:00:00','2022-06-11 21:27:46','2022-06-11 21:27:46',1,'/uploads/VMIHfwZqTm');

@@ -23,7 +23,7 @@ const upload = multer({
 
 // ------------------ VAR ------------------
 const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-const key = "Bearer nuWbpKmO4zTDQkWgGXWWkxbgpjsi"; //aku ganti punyaku
+const key = "Bearer gDCzebXAhitAPR9T8ZUAeyuZ2LIA"; //aku ganti punyaku
 
 // ------------------ FUNCTION ------------------
 const generateUniqueApikey = (length) => {
@@ -477,8 +477,8 @@ router.post("/checkInFlight/", async function(req, res) {
 })
 
 // ------------------ HOTEL ------------------
-//search hotel (masukin nama kotanya) [BELUM || PERIKSA] [iki temenan durung mari blas, nanti dibahas lgi, aku push dulu]
-router.get("/searchHotel/:idCity", upload.none(), async function (req, res) {
+//search hotel (masukin nama kotanya) [DONE|Perlu diperiksa]
+router.get("/searchHotel", upload.none(), async function (req, res) {
     let header = req.header("x-auth-token");
     let update = await executeQuery(`update users set apihit = apihit - 1 where apikey = "${header}"`);
     if (!update) {
@@ -487,30 +487,36 @@ router.get("/searchHotel/:idCity", upload.none(), async function (req, res) {
         });
     }
 
-    let idCity = req.params.idCity.toUpperCase();
+    let idCity = req.query.idCity.toUpperCase();
+    let countryCode = req.query.countryCode.toUpperCase();
+    if(countryCode.length > 2 || countryCode.length <= 0){
+        return res.status(402).send({message: "Bad request. Country code must be 2 letters!"});
+    }
+    console.log(`https://test.api.amadeus.com/v1/reference-data/locations/cities?countryCode=${countryCode}&keyword=${idCity}&`);
     let cityName = await axios.get(
-        `https://test.api.amadeus.com/v1/reference-data/locations?subType=CITY&keyword=${idCity}`, {
+        `https://test.api.amadeus.com/v1/reference-data/locations/cities?countryCode=${countryCode}&keyword=${idCity}&`, {
             headers: {
                 'Authorization': key
             }
         });
-    // console.log(cityName.data.data);
+    console.log(cityName.data.data);
     let city = cityName.data.data;
     if(city.length === 0){
         return res.status(404).send({message:"No data for city "+idCity});
     }
     // return res.status(200).send({message: "ok"});
 
-    let numb = -1;
-    for (let i = 0; i < city.length; i++) {
-        if (city[i].name.includes(idCity)){
-            numb = i;
-            break;
-        }
-    }
-    let cityCode = city[numb].address.cityCode;
+    let numb = 0;
+    // for (let i = 0; i < city.length; i++) {
+    //     if (city[i].name.includes(idCity)){
+    //         numb = i;
+    //         break;
+    //     }
+    // }
+    let cityCode = city[numb].iataCode;
+    console.log(city[numb]);
     console.log("=================");
-    console.log(city[numb].name + " - " + city[numb].address.cityCode);
+    console.log(city[numb].name + " - " + cityCode);
     console.log("=================");
     // return res.status(200).send({
     //     "name": city[numb].name,
