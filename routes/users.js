@@ -63,6 +63,7 @@ const checkUser = async function (req, res, next) {
         });
     } else {
         req.header["user_id"] = search_user.id;
+        req.header["apikey"] = userdata.apikey;
         return next();
     }
 }
@@ -394,8 +395,7 @@ router.post("/package/:idpackage", [checkUser], async function (req, res) {
 //search flight [DONE]
 router.get("/searchFlight/:airportCode", [checkUser, upload.none()], async function (req, res) {
     //Departure Airport code following IATA standard
-    let header = req.header('x-auth-token');
-    let update = doAPIHit(header, 1);
+    let update = doAPIHit(req.header.apikey, 1);
     if (!update) {
         return res.status(401).send({
             message: "Hit quota exceeded"
@@ -569,8 +569,7 @@ router.get("/searchFlight/:airportCode", [checkUser, upload.none()], async funct
 // ------------------ HOTEL ------------------
 //search hotel (masukin nama kotanya) [DONE|Perlu diperiksa]
 router.get("/searchHotel", [checkUser, upload.none()], async function (req, res) {
-    let header = req.header("x-auth-token");
-    let update = doAPIHit(header,1);
+    let update = doAPIHit(req.header.apikey, 1);
     if (!update) {
         return res.status(401).send({
             message: "Hit quota exceeded"
@@ -676,7 +675,6 @@ router.get("/searchHotel", [checkUser, upload.none()], async function (req, res)
 
 //post & update review hotel [DONE]
 router.post("/reviewHotel", [checkUser, upload.none()], async function (req, res) {
-    let user_id = req.header.user_id
     // validasi body
     const body = req.body;
     const schema = Joi.object({
@@ -774,7 +772,8 @@ router.post("/reviewHotel", [checkUser, upload.none()], async function (req, res
 
 //cari review hotel [PERIKSA]
 router.get("/reviewHotel/:idHotel?", [checkUser], async function (req, res) {
-    let update = doAPIHit(search_user.id, 1);
+    let header = req.header('x-auth-token');
+    let update = doAPIHit(header, 1);
     if (!update) {
         return res.status(401).send({
             message: "Hit quota exceeded"

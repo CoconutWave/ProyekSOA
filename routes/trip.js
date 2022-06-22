@@ -18,7 +18,14 @@ const checkUser = async function (req, res, next) {
             message: "Unauthorized!"
         });
     }
-    let search_user = await executeQuery(`select * from users where apikey = "${header}"`);
+    try {
+        userdata = jwt.verify(header, secret);
+    } catch (error) {
+        return res.status(400).send({
+            "msg": "token tidak valid!"
+        });
+    }
+    let search_user = await executeQuery(`select * from users where apikey = "${userdata.apikey}"`);
     if (search_user.length === 0) {
         return res.status(404).send({
             message: "User not found"
@@ -31,6 +38,7 @@ const checkUser = async function (req, res, next) {
         });
     } else {
         req.header["user_id"] = search_user.id;
+        req.header["apikey"] = userdata.apikey;
         return next();
     }
 }
@@ -66,8 +74,7 @@ router.post("/", checkUser, async function (req, res) {
         return res.status(400).send(`Trip ${route_name} is already exist!`)
     }
 
-    let header = req.header('x-auth-token');
-    let update = doAPIHit(header,1);
+    let update = doAPIHit(req.header.apikey,1);
     if (!update) {
         return res.status(401).send({
             message: "Hit quota exceeded"
@@ -107,8 +114,7 @@ router.post("/city/:idTrip", checkUser, async function(req, res){
         return res.status(403).send(error.toString());
     }
 
-    let header = req.header('x-auth-token');
-    let update = doAPIHit(header,1);
+    let update = doAPIHit(req.header.apikey,1);
     if (!update) {
         return res.status(401).send({
             message: "Hit quota exceeded"
@@ -182,8 +188,7 @@ router.post("/hotel/:idTrip", checkUser, async function(req, res){
         return res.status(403).send(error.toString());
     }
 
-    let header = req.header('x-auth-token');
-    let update = doAPIHit(header,1);
+    let update = doAPIHit(req.header.apikey,1);
     if (!update) {
         return res.status(401).send({
             message: "Hit quota exceeded"
@@ -282,8 +287,7 @@ router.post("/activity/:idTrip", checkUser, async function(req, res){
         return res.status(403).send(error.toString());
     }
 
-    let header = req.header('x-auth-token');
-    let update = doAPIHit(header,1);
+    let update = doAPIHit(req.header.apikey,1);
     if (!update) {
         return res.status(401).send({
             message: "Hit quota exceeded"
