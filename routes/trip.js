@@ -8,7 +8,7 @@ const axios = require("axios");
 const jwt = require("jsonwebtoken");
 
 // ------------------ VAR ------------------
-const key = "Bearer camnAcFPQIxWtBbclCZkzbkLEPHv";
+const key = "Bearer NUVJypq6nhfC15ItHwdA4ln1v0vA";
 const secret = "proyeksoauserbagian";
 
 // ------------------ FUNCTION ------------------
@@ -83,7 +83,7 @@ router.post("/", checkUser, async function (req, res) {
         });
     }
 
-    let user = await executeQuery(`select * from users where apikey = '${header}'`);
+    let user = await executeQuery(`select * from users where apikey = '${req.header.apikey}'`);
 
     try {
         let insert = await executeQuery(`insert into route
@@ -125,7 +125,7 @@ router.post("/city/:idTrip", checkUser, async function(req, res){
 
     let idTrip = Number(req.params.idTrip);
 
-    let user = await executeQuery(`select * from users where apikey = '${header}'`);
+    let user = await executeQuery(`select * from users where apikey = '${req.header.apikey}'`);
     let trip = await executeQuery(`select * from route where id = ${idTrip}`);
     if(trip.length<1) {
         return res.status(401).send({
@@ -199,7 +199,7 @@ router.post("/hotel/:idTrip", checkUser, async function(req, res){
 
     let idTrip = Number(req.params.idTrip);
 
-    let user = await executeQuery(`select * from users where apikey = '${header}'`);
+    let user = await executeQuery(`select * from users where apikey = '${req.header.apikey}'`);
     let trip = await executeQuery(`select * from route where id = ${idTrip}`);
     if(trip.length<1) {
         return res.status(401).send({
@@ -296,7 +296,7 @@ router.post("/activity/:idTrip", checkUser, async function(req, res){
 
     let idTrip = Number(req.params.idTrip);
 
-    let user = await executeQuery(`select * from users where apikey = '${a[ikey]}'`);
+    let user = await executeQuery(`select * from users where apikey = '${req.header.apikey}'`);
     let trip = await executeQuery(`select * from route where id = ${idTrip}`);
     if(trip.length<1) {
         return res.status(401).send({
@@ -435,7 +435,7 @@ router.put("/completeTrip/:id", checkUser, async function(req, res){
 
     let userdata;
     try {
-        userdata = jwt.verify(header, secret);
+        userdata = jwt.verify(req.header('x-auth-token'), secret);
     } catch (error) {
         return res.status(400).send({
             "msg": "token tidak valid!"
