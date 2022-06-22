@@ -24,6 +24,7 @@ const upload = multer({
 // ------------------ VAR ------------------
 const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
 const key = "Bearer 81gCLvNZnYXIoaj0hWECPf62sa9b"; //aku ganti punyaku
+const secret = "proyeksoauserbagian";
 
 // ------------------ FUNCTION ------------------
 const generateUniqueApikey = (length) => {
@@ -42,7 +43,14 @@ const checkUser = async function (req, res, next) {
             message: "Unauthorized!"
         });
     }
-    let search_user = await executeQuery(`select * from users where apikey = "${header}"`);
+    try {
+        userdata = jwt.verify(header, secret);
+    } catch (error) {
+        return res.status(400).send({
+            "msg": "token tidak valid!"
+        });
+    }
+    let search_user = await executeQuery(`select * from users where apikey = "${userdata.apikey}"`);
     if (search_user.length === 0) {
         return res.status(404).send({
             message: "User not found"
@@ -201,9 +209,14 @@ router.post("/login", upload.none(), async function (req, res) {
                 "message": "Invalid Password"
             })
         }
+        let token = jwt.sign({
+            apikey: client_id
+        }, secret, {
+            expiresIn: '3600s'
+        });
         return res.status(200).send({
             message: "Login Success!",
-            api_key: users[0].apikey
+            token: token
         })
 
 

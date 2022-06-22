@@ -113,7 +113,7 @@ router.post("/login", async function (req, res) {
 //bayar ?? [PERIKSA]
 router.post("/bill", async function (req, res) {
     if (!req.header('x-auth-token')) return res.status(401).send({
-        "msg": "token tidak ditemukan!"
+        "msg": "Token Requied!"
     });
     let header = req.header('x-auth-token');
     let userdata;
@@ -121,7 +121,7 @@ router.post("/bill", async function (req, res) {
         userdata = jwt.verify(header, secret);
     } catch (error) {
         return res.status(400).send({
-            "msg": "token tidak valid!"
+            "msg": "Token Invalid!"
         });
     }
     let user_id = userdata.client_id;
@@ -129,8 +129,8 @@ router.post("/bill", async function (req, res) {
     const schema = Joi.object({
         name: Joi.string().required(),
         desc: Joi.string(),
-        price: Joi.number().min(1),
-        hit_amount: Joi.number().min(1),
+        price: Joi.number().min(1).required(),
+        hit_amount: Joi.number().min(1).required(),
     });
     try {
         await schema.validateAsync(req.body);
@@ -170,10 +170,10 @@ router.post("/bill", async function (req, res) {
     // });
 });
 
-//get user [PERIKSA]
-router.get("/user", async function (req, res) {
+//update package
+router.put("/bill/:packageid", async function (req, res) {
     if (!req.header('x-auth-token')) return res.status(401).send({
-        "msg": "token tidak ditemukan!"
+        "msg": "Token Requied!"
     });
     let header = req.header('x-auth-token');
     let userdata;
@@ -181,7 +181,99 @@ router.get("/user", async function (req, res) {
         userdata = jwt.verify(header, secret);
     } catch (error) {
         return res.status(400).send({
-            "msg": "token tidak valid!"
+            "msg": "Token Invalid!"
+        });
+    }
+
+    const schema = Joi.object({
+        name: Joi.string(),
+        desc: Joi.string(),
+        price: Joi.number().min(1),
+        hit_amount: Joi.number().min(1),
+    });
+    try {
+        await schema.validateAsync(req.body);
+    } catch (error) {
+        return res.status(400).send(error.toString());
+    }
+
+    let {
+        name,
+        desc,
+        price,
+        hit_amount
+    } = req.body
+
+    try {
+        let updatedata = await executeQuery(`select * from subscription_plan where plan_id = ${req.params.packageid}`)
+        if (updatedata.length == 0) {
+            return res.status(404).send({
+                "Message": "Subscription Package not found"
+            });
+        }
+
+        await executeQuery(`update subscription_plan set plan_name = '${name}' ,plan_desc = '${desc}',plan_price = ${price},plan_hit_amount = ${hit_amount} where  plan_id = ${req.params.packageid}`)
+        return res.status(201).send({
+            "Plan Name": name,
+            "Plan Description": desc,
+            "Plan Price": price,
+            "Plan Hit Amount": hit_amount,
+        });
+    } catch (error) {
+        console.log(error);
+        return res.status(500).send({
+            message: "Internal error!"
+        });
+    }
+});
+
+//delete package
+router.delete("/bill/:packageid", async function (req, res) {
+    if (!req.header('x-auth-token')) return res.status(401).send({
+        "msg": "Token Requied!"
+    });
+    let header = req.header('x-auth-token');
+    let userdata;
+    try {
+        userdata = jwt.verify(header, secret);
+    } catch (error) {
+        return res.status(400).send({
+            "msg": "Token Invalid!"
+        });
+    }
+
+    try {
+        let updatedata = await executeQuery(`select * from subscription_plan where plan_id = ${req.params.packageid}`)
+        if (updatedata.length == 0) {
+            return res.status(404).send({
+                "Message": "Subscription Package not found"
+            });
+        }
+
+        await executeQuery(`delete from subscription_plan where plan_id = ${req.params.packageid}`)
+        return res.status(201).send({
+            "Message": `${updatedata[0].plan_name} has been deleted`
+        })
+    } catch (error) {
+        console.log(error);
+        return res.status(500).send({
+            message: "Internal error!"
+        });
+    }
+});
+
+//get user [PERIKSA]
+router.get("/user", async function (req, res) {
+    if (!req.header('x-auth-token')) return res.status(401).send({
+        "msg": "Token Requied!"
+    });
+    let header = req.header('x-auth-token');
+    let userdata;
+    try {
+        userdata = jwt.verify(header, secret);
+    } catch (error) {
+        return res.status(400).send({
+            "msg": "Token Invalid!"
         });
     }
 
@@ -241,7 +333,7 @@ router.get("/user", async function (req, res) {
 //delete user [PERIKSA]
 router.delete("/user/:email", async function (req, res) {
     if (!req.header('x-auth-token')) return res.status(401).send({
-        "msg": "token tidak ditemukan!"
+        "msg": "Token Requied!"
     });
     let header = req.header('x-auth-token');
     let userdata;
@@ -249,7 +341,7 @@ router.delete("/user/:email", async function (req, res) {
         userdata = jwt.verify(header, secret);
     } catch (error) {
         return res.status(400).send({
-            "msg": "token tidak valid!"
+            "msg": "Token Invalid!"
         });
     }
 
@@ -286,7 +378,7 @@ router.delete("/user/:email", async function (req, res) {
 //get all review from user [PERIKSA]
 router.get("/review/:email", async function (req, res) {
     if (!req.header('x-auth-token')) return res.status(401).send({
-        "msg": "token tidak ditemukan!"
+        "msg": "Token Requied!"
     });
     let header = req.header('x-auth-token');
     let userdata;
@@ -294,7 +386,7 @@ router.get("/review/:email", async function (req, res) {
         userdata = jwt.verify(header, secret);
     } catch (error) {
         return res.status(400).send({
-            "msg": "token tidak valid!"
+            "msg": "Token Invalid!"
         });
     }
 
