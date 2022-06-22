@@ -1,33 +1,37 @@
-const { default: axios } = require("axios");
+const {
+    default: axios
+} = require("axios");
 const express = require("express");
 const Joi = require('joi').extend(require('@joi/date'));
 const router = express.Router();
-const {executeQuery} = require("../database");
+const {
+    executeQuery
+} = require("../database");
 const jwt = require("jsonwebtoken");
 
 // ------------------ VAR ------------------
-const key = "Bearer iCJpEeXozfR3PLY5s3QHBgFPdmML";//aku ganti punyaku
+const key = "Bearer iCJpEeXozfR3PLY5s3QHBgFPdmML"; //aku ganti punyaku
 let secret = "proyeksoa";
 
 // ------------------ FUNCTION ------------------
 const genID = (length) => {
-    const alphabets= 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890'.split('');
-    let key= '';
+    const alphabets = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890'.split('');
+    let key = '';
     for (let i = length; i > 0; --i) key += alphabets[Math.floor(Math.random() * alphabets.length)];
     return key;
 };
 
 const genSecret = () => {
-    const alphabets= 'abcdefghijklmnopqrstuvwxyz1234567890'.split('');
-    let key= '';
+    const alphabets = 'abcdefghijklmnopqrstuvwxyz1234567890'.split('');
+    let key = '';
     for (let i = 8; i > 0; --i) key += alphabets[Math.floor(Math.random() * alphabets.length)];
-    key+="-";
+    key += "-";
     for (let i = 4; i > 0; --i) key += alphabets[Math.floor(Math.random() * alphabets.length)];
-    key+="-";
+    key += "-";
     for (let i = 4; i > 0; --i) key += alphabets[Math.floor(Math.random() * alphabets.length)];
-    key+="-";
+    key += "-";
     for (let i = 4; i > 0; --i) key += alphabets[Math.floor(Math.random() * alphabets.length)];
-    key+="-";
+    key += "-";
     for (let i = 12; i > 0; --i) key += alphabets[Math.floor(Math.random() * alphabets.length)];
     return key;
 };
@@ -47,20 +51,22 @@ router.post("/register", async function (req, res) {
 
     let developer_name = req.body.developer_name;
     let client_id = genID(10);
-    let client_secret  = genSecret();
+    let client_secret = genSecret();
 
     let insert = `insert into developer_account values (
         '${client_id}', '${client_secret}', '${developer_name}')`;
     let hasilCek = await executeQuery(insert);
 
-    if(hasilCek) {
-       return res.status(200).send({
-           "client_id" : client_id,
-           "client_secret" : client_secret,
-           "developer_name" :developer_name
+    if (hasilCek) {
+        return res.status(200).send({
+            "client_id": client_id,
+            "client_secret": client_secret,
+            "developer_name": developer_name
         });
     }
-    return res.status(501).send({"msg":"NOT IMPLEMENTED"});
+    return res.status(501).send({
+        "msg": "NOT IMPLEMENTED"
+    });
 });
 
 //generate token (1 hari) [PERIKSA]
@@ -78,56 +84,108 @@ router.post("/login", async function (req, res) {
     }
 
     let client_id = req.body.client_id;
-    let client_secret  = req.body.client_secret;
+    let client_secret = req.body.client_secret;
 
     console.log(req.body);
 
     let cek = `select * from developer_account where client_id = '${client_id}' and client_secret = '${client_secret}'`;
     let hasilCek = await executeQuery(cek);
 
-    if(hasilCek.length < 1) return res.status(400).send({"msg":"client id atau secret salah!"});
+    if (hasilCek.length < 1) return res.status(400).send({
+        "msg": "client id atau secret salah!"
+    });
     else {
-        let token = jwt.sign({client_id: client_id, client_secret: client_secret}, secret, {expiresIn: '86400s'});
+        let token = jwt.sign({
+            client_id: client_id,
+            client_secret: client_secret
+        }, secret, {
+            expiresIn: '86400s'
+        });
         return res.status(200).send({
-            "token" : token
+            "token": token
         });
     }
-    return res.status(501).send({"msg":"NOT IMPLEMENTED"});
+    return res.status(501).send({
+        "msg": "NOT IMPLEMENTED"
+    });
 });
 
-//bayar ?? [BELUM]
-router.get("/bill", async function (req, res) {
-    if(!req.header('x-auth-token')) return res.status(401).send({"msg":"token tidak ditemukan!"});
+//bayar ?? [PERIKSA]
+router.post("/bill", async function (req, res) {
+    if (!req.header('x-auth-token')) return res.status(401).send({
+        "msg": "token tidak ditemukan!"
+    });
     let header = req.header('x-auth-token');
     let userdata;
     try {
         userdata = jwt.verify(header, secret);
     } catch (error) {
-        return res.status(400).send({"msg":"token tidak valid!"});
+        return res.status(400).send({
+            "msg": "token tidak valid!"
+        });
     }
     let user_id = userdata.client_id;
 
-    let data = await executeQuery(`select * from access_log where client_id = '${user_id}'`);
-    let count = data.length;
-    let bill = count * 0.1;
-    return res.status(200).send({
-        "bill":bill
+    const schema = Joi.object({
+        name: Joi.string().required(),
+        desc: Joi.string(),
+        price: Joi.number().min(1),
+        hit_amount: Joi.number().min(1),
     });
-    return res.status(501).send({"msg":"NOT IMPLEMENTED"});
+    try {
+        await schema.validateAsync(req.body);
+    } catch (error) {
+        return res.status(400).send(error.toString());
+    }
+
+    let {
+        name,
+        desc,
+        price,
+        hit_amount
+    } = req.body
+
+    try {
+        await executeQuery(`insert into subscription_plan values (0,'${name}','${desc}',${price},${hit_amount},1)`)
+        return res.status(201).send({
+            "Plan Name": name,
+            "Plan Description": desc,
+            "Plan Price": price,
+            "Plan Hit Amount": hit_amount,
+        });
+    } catch (error) {
+        console.log(error);
+        return res.status(500).send({
+            message: "Internal error!"
+        });
+    }
+    // let data = await executeQuery(`select * from access_log where client_id = '${user_id}'`);
+    // let count = data.length;
+    // let bill = count * 0.1;
+    // return res.status(200).send({
+    //     "bill": bill
+    // });
+    // return res.status(501).send({
+    //     "msg": "NOT IMPLEMENTED"
+    // });
 });
 
 //get user [PERIKSA]
 router.get("/user", async function (req, res) {
-    if(!req.header('x-auth-token')) return res.status(401).send({"msg":"token tidak ditemukan!"});
+    if (!req.header('x-auth-token')) return res.status(401).send({
+        "msg": "token tidak ditemukan!"
+    });
     let header = req.header('x-auth-token');
     let userdata;
     try {
         userdata = jwt.verify(header, secret);
     } catch (error) {
-        return res.status(400).send({"msg":"token tidak valid!"});
+        return res.status(400).send({
+            "msg": "token tidak valid!"
+        });
     }
 
-    if(req.query.email) {
+    if (req.query.email) {
         let email = req.query.email;
 
         const user = await executeQuery(`select *, 
@@ -135,22 +193,22 @@ router.get("/user", async function (req, res) {
             DATE_FORMAT(date_registered, '%d/%m/%Y') as date  
             from users where email = '${email}'
             and is_active = 1`);
-        if(user.length<1) {
+        if (user.length < 1) {
             return res.status(401).send({
-                "message" : "User not found"
+                "message": "User not found"
             })
         }
 
         let active = "active";
-        if(user[0].is_active === 0) active = "inactive";
+        if (user[0].is_active === 0) active = "inactive";
 
         return res.status(401).send({
-            "id" : user[0].id,
-            "email" : user[0].email,
-            "name" : user[0].fname + " " + user[0].lname,
-            "date_of_birth" : user[0].dob,
-            "date_registered" : user[0].date,
-            "active" : active,
+            "id": user[0].id,
+            "email": user[0].email,
+            "name": user[0].fname + " " + user[0].lname,
+            "date_of_birth": user[0].dob,
+            "date_registered": user[0].date,
+            "active": active,
         })
     } else {
         const user = await executeQuery(`select *,
@@ -160,45 +218,51 @@ router.get("/user", async function (req, res) {
             where is_active = 1`);
 
         let array = [];
-        for(let i=0; i<user.length;i++) {
+        for (let i = 0; i < user.length; i++) {
             let active = "active";
-            if(user[i].is_active === 0) active = "inactive";
+            if (user[i].is_active === 0) active = "inactive";
             let temp = {
-                "id" : user[i].id,
-                "email" : user[i].email,
-                "name" : user[i].fname + " " + user[i].lname,
-                "date_of_birth" : user[i].dob,
-                "date_registered" : user[i].date,
-                "active" : active,
+                "id": user[i].id,
+                "email": user[i].email,
+                "name": user[i].fname + " " + user[i].lname,
+                "date_of_birth": user[i].dob,
+                "date_registered": user[i].date,
+                "active": active,
             }
             array.push(temp);
         }
 
-        return res.status(401).send({array});
+        return res.status(401).send({
+            array
+        });
     }
 });
 
 //delete user [PERIKSA]
 router.delete("/user/:email", async function (req, res) {
-    if(!req.header('x-auth-token')) return res.status(401).send({"msg":"token tidak ditemukan!"});
+    if (!req.header('x-auth-token')) return res.status(401).send({
+        "msg": "token tidak ditemukan!"
+    });
     let header = req.header('x-auth-token');
     let userdata;
     try {
         userdata = jwt.verify(header, secret);
     } catch (error) {
-        return res.status(400).send({"msg":"token tidak valid!"});
+        return res.status(400).send({
+            "msg": "token tidak valid!"
+        });
     }
 
-    if(req.params.email) {
+    if (req.params.email) {
         let email = req.params.email;
 
         const user = await executeQuery(`select * 
             from users 
             where email = '${email}'
             and is_active = 1`);
-        if(user.length<1) {
+        if (user.length < 1) {
             return res.status(400).send({
-                "message" : "User not found"
+                "message": "User not found"
             })
         }
 
@@ -207,13 +271,13 @@ router.delete("/user/:email", async function (req, res) {
             is_active = 0 
             where email = '${user[0].email}'`);
 
-        if(update) {
+        if (update) {
             return res.status(400).send({
-                "message" : "Successfully deleted",
+                "message": "Successfully deleted",
             })
         } else {
             return res.status(400).send({
-                "message" : "Can't delete",
+                "message": "Can't delete",
             })
         }
     }
@@ -221,13 +285,17 @@ router.delete("/user/:email", async function (req, res) {
 
 //get all review from user [PERIKSA]
 router.get("/review/:email", async function (req, res) {
-    if(!req.header('x-auth-token')) return res.status(401).send({"msg":"token tidak ditemukan!"});
+    if (!req.header('x-auth-token')) return res.status(401).send({
+        "msg": "token tidak ditemukan!"
+    });
     let header = req.header('x-auth-token');
     let userdata;
     try {
         userdata = jwt.verify(header, secret);
     } catch (error) {
-        return res.status(400).send({"msg":"token tidak valid!"});
+        return res.status(400).send({
+            "msg": "token tidak valid!"
+        });
     }
 
     // validasi params
@@ -240,26 +308,29 @@ router.get("/review/:email", async function (req, res) {
     } catch (error) {
         return res.status(400).send(error.toString());
     }
-    
+
     try {
         let user = await executeQuery(`select * from users where email = "${par.email}"`);
         console.log(`select * from users where email = "${par.email}"`);
-        if(user.length === 0){
-            return res.status(404).send({message: "User not found!"});
+        if (user.length === 0) {
+            return res.status(404).send({
+                message: "User not found!"
+            });
         }
         let reviews = await executeQuery(`select hotel_id, user_id, review_content, review_score, date_format(review_date, "%d/%m/%Y") as review_date from review where user_id = ${user[0].id}`);
         let array_review = [];
         for (let i = 0; i < reviews.length; i++) {
             console.log(reviews[i].hotel_id)
-            let hotel = await axios.get(`https://test.api.amadeus.com/v1/reference-data/locations/hotels/by-hotels?hotelIds=${reviews[i].hotel_id}`,{
+            let hotel = await axios.get(`https://test.api.amadeus.com/v1/reference-data/locations/hotels/by-hotels?hotelIds=${reviews[i].hotel_id}`, {
                 headers: {
                     'Authorization': key
-                }});
-            hotel=hotel.data.data[0];
+                }
+            });
+            hotel = hotel.data.data[0];
             const eachReview = {
                 hotel: hotel.name,
                 hotel_chainCode: hotel.chainCode,
-                rating: reviews[i].review_score+"/5",
+                rating: reviews[i].review_score + "/5",
                 date_reviewed: reviews[i].review_date,
                 review_content: reviews[i].review_content
             }
@@ -272,7 +343,9 @@ router.get("/review/:email", async function (req, res) {
         });
     } catch (error) {
         console.log(error);
-        return res.status(500).send({message: "Internal error"});
+        return res.status(500).send({
+            message: "Internal error"
+        });
     }
 });
 

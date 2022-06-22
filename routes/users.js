@@ -13,7 +13,7 @@ const storage = multer.diskStorage({
     filename: function (req, file, cb) {
         // let date = new Date();
         // console.log(date.toString());
-        const extension = file.originalname.split('.')[file.originalname.split('.').length-1];
+        const extension = file.originalname.split('.')[file.originalname.split('.').length - 1];
         cb(null, req.header("x-auth-token") + "." + extension);
     }
 });
@@ -59,11 +59,11 @@ const checkUser = async function (req, res, next) {
     }
 }
 
-async function doAPIHit(user_id,apihit_amount) {
+async function doAPIHit(user_id, apihit_amount) {
     let search_user = await executeQuery(`select * from users where apikey = "${user_id}"`);
-    if(search_user[0].apihit<apihit_amount){
+    if (search_user[0].apihit < apihit_amount) {
         return false
-    }else{
+    } else {
         await executeQuery(`update users set apihit = apihit - ${apihit_amount} where apikey = "${user_id}"`)
         return true
     }
@@ -152,7 +152,7 @@ router.post("/register", upload.none(), async function (req, res) {
         } while (check_api.length > 0);
 
         let insert_user = await executeQuery(`insert into users
-            values('',"${apikey}", 5, "${email}", "${fname}", "${lname}", "${password}", STR_TO_DATE("${date_of_birth}", "%d/%m/%YYYY"),
+            values('',"${apikey}", 5, "${email}", "${fname}",0, "${lname}", "${password}", STR_TO_DATE("${date_of_birth}", "%d/%m/%YYYY"),
             NOW(), NOW(), 1)`);
         if (insert_user) {
             return res.status(200).send({
@@ -272,29 +272,108 @@ router.put("/updatePhoto", [checkUser, upload.single("IDCard")], async function 
         and is_active = 1`);
     } catch (error) {
         console.log(error);
-        return res.status(500).send({message: "Internal error!"});
+        return res.status(500).send({
+            message: "Internal error!"
+        });
     }
 
-    if(user.length === 0){
+    if (user.length === 0) {
         fs.unlinkSync(`/uploads/${header}`);
-        return res.status(404).send({message: "User not found!"});
+        return res.status(404).send({
+            message: "User not found!"
+        });
     }
-    
+
     try {
         let update_user = await executeQuery(`update users set id_card_dir = "/uploads/${header}" where id = ${user[0].id}`);
         let message = "ID Card photo successfully updated";
         // console.log(user[0].id_card_dir);
-        if(user[0].id_card_dir == null){
+        if (user[0].id_card_dir == null) {
             message = "ID Card photo successfully uploaded";
         }
         return res.status(200).send({
             message: message,
             API_key: user[0].apikey,
-            id_card_directory: "/uploads/"+header
+            id_card_directory: "/uploads/" + header
         });
     } catch (error) {
         console.log(error);
-        return res.status(500).send({message: "Internal error!"});
+        return res.status(500).send({
+            message: "Internal error!"
+        });
+    }
+});
+
+//isi ulang balance
+router.post("/recharge", [checkUser], async function (req, res) {
+    const schema =
+        Joi.object({
+            balance_amount: Joi.number().required().min(1000),
+        })
+
+    try {
+        await schema.validateAsync(req.body);
+    } catch (error) {
+        return res.status(401).send(error.toString());
+    }
+    try {
+        let user = await executeQuery(`select * from users where id = ${req.header.user_id}`)
+        user = user[0]
+        console.log(user.balance);
+        console.log(req.body.balance_amount);
+        executeQuery(`update users set balance = ${user.balance+req.body.balance_amount} where id = '${req.header.user_id}' and is_active = 1`)
+        return res.status(201).send({
+            message: `${user.fname}'s balance has been added by Rp.${req.body.balance_amount}`
+        });
+    } catch (error) {
+        console.log(error);
+        return res.status(500).send({
+            message: "Internal error!"
+        });
+    }
+});
+
+
+//melihat subscription yang ada
+router.get("/package", async function (req, res) {
+    try {
+        let packages = await executeQuery(`select plan_id as "Plan ID", plan_name as "Plan Name", plan_desc as "Plan Description", plan_price as "Plan Price" , plan_hit_amount as "Plan Hit Amount" from subscription_plan where is_plan_available = 1`);
+        return res.status(200).send(packages);
+    } catch (error) {
+        console.log(error);
+        return res.status(500).send({
+            message: "Internal error!"
+        });
+    }
+});
+
+//membeli subscription
+router.post("/package/:idpackage", [checkUser], async function (req, res) {
+    let header = req.header('x-auth-token');
+
+    try {
+        let package = await executeQuery(`select * from subscription_plan where plan_id = ${req.params.idpackage}`)
+        if (package.length == 0) {
+            return res.status(404).send({
+                message: "Subscription Plan not found"
+            });
+        }
+        package = package[0]
+        let user = await executeQuery(`select * from users where id = ${req.header.user_id}`)
+        if (user.balance < package.plan_price) {
+            return res.status(401).send({
+                message: "Balance is not enough"
+            });
+        }
+        executeQuery(`update users set balance = ${user.balance-package.plan_price}, apihit= ${package.plan_hit_amount} where id = '${req.header.user_id}' and is_active = 1`)
+        return res.status(201).send({
+            message: `${package.plan_name} package has been bought, thank you and have a nice day :)`
+        });
+    } catch (error) {
+        console.log(error);
+        return res.status(500).send({
+            message: "Internal error!"
+        });
     }
 });
 
@@ -303,7 +382,7 @@ router.put("/updatePhoto", [checkUser, upload.single("IDCard")], async function 
 router.get("/searchFlight/:airportCode", [checkUser, upload.none()], async function (req, res) {
     //Departure Airport code following IATA standard
     let header = req.header('x-auth-token');
-    let update = doAPIHit(header,1);
+    let update = doAPIHit(header, 1);
     if (!update) {
         return res.status(401).send({
             message: "Hit quota exceeded"
@@ -489,8 +568,10 @@ router.get("/searchHotel", [checkUser, upload.none()], async function (req, res)
 
     let idCity = req.query.idCity.toUpperCase();
     let countryCode = req.query.countryCode.toUpperCase();
-    if(countryCode.length > 2 || countryCode.length <= 0){
-        return res.status(402).send({message: "Bad request. Country code must be 2 letters!"});
+    if (countryCode.length > 2 || countryCode.length <= 0) {
+        return res.status(402).send({
+            message: "Bad request. Country code must be 2 letters!"
+        });
     }
     console.log(`https://test.api.amadeus.com/v1/reference-data/locations/cities?countryCode=${countryCode}&keyword=${idCity}&`);
     let cityName = await axios.get(
@@ -501,8 +582,10 @@ router.get("/searchHotel", [checkUser, upload.none()], async function (req, res)
         });
     console.log(cityName.data.data);
     let city = cityName.data.data;
-    if(city.length === 0){
-        return res.status(404).send({message:"No data for city "+idCity});
+    if (city.length === 0) {
+        return res.status(404).send({
+            message: "No data for city " + idCity
+        });
     }
     // return res.status(200).send({message: "ok"});
 
@@ -579,7 +662,7 @@ router.get("/searchHotel", [checkUser, upload.none()], async function (req, res)
 });
 
 //post & update review hotel [DONE]
-router.post("/reviewHotel", [checkUser,upload.none()], async function (req, res) {
+router.post("/reviewHotel", [checkUser, upload.none()], async function (req, res) {
     let user_id = req.header.user_id
     // validasi body
     const body = req.body;
@@ -704,10 +787,10 @@ router.get("/reviewHotel/:idHotel?", [checkUser], async function (req, res) {
     }
 });
 
-router.get("/searchActivities/:location", [checkUser, upload.none()], async function (req, res){
+router.get("/searchActivities/:location", [checkUser, upload.none()], async function (req, res) {
     // cek param
     let location = req.params.location
-    if (!location){
+    if (!location) {
         return res.status(400).send("Please provide location")
     }
 
@@ -715,7 +798,7 @@ router.get("/searchActivities/:location", [checkUser, upload.none()], async func
         // pake third party api gratis, ga perlu register :v
         let coordinates = await axios.get(`https://www.gps-coordinates.net/api/${location}`);
         console.log(coordinates.data)
-        if (coordinates.data.responseCode === "400"){
+        if (coordinates.data.responseCode === "400") {
             return res.status(404).send("Invalid location")
         }
 
@@ -733,7 +816,7 @@ router.get("/searchActivities/:location", [checkUser, upload.none()], async func
 
         // cek result data
         activities = activities.data.data
-        if (activities.length == 0){
+        if (activities.length == 0) {
             return res.status(404).send(`No activities found in ${location}`)
         }
 
@@ -741,17 +824,16 @@ router.get("/searchActivities/:location", [checkUser, upload.none()], async func
         let activities_list = [];
         for (let i = 0; i < activities.length; i++) {
             let temp = {
-                "id"                : activities[i].id,
-                "name"              : activities[i].name,
-                "shortDescription"  : activities[i].shortDescription,
-                "rating"            : activities[i].rating,
-                "pictures"          : activities[i].pictures,
+                "id": activities[i].id,
+                "name": activities[i].name,
+                "shortDescription": activities[i].shortDescription,
+                "rating": activities[i].rating,
+                "pictures": activities[i].pictures,
             }
             activities_list.push(temp);
         }
         return res.status(200).send(activities_list)
-    }
-    catch (error) {
+    } catch (error) {
         return res.status(500).send(error.toString())
     }
 })

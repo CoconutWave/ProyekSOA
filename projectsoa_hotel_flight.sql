@@ -1,6 +1,6 @@
 /*
 SQLyog Community v13.1.9 (64 bit)
-MySQL - 10.4.22-MariaDB : Database - soaproject_hotel_flight
+MySQL - 10.4.24-MariaDB : Database - soaproject_hotel_flight
 *********************************************************************
 */
 
@@ -96,8 +96,7 @@ DROP TABLE IF EXISTS `developer_account`;
 
 CREATE TABLE `developer_account` (
   `client_id` varchar(50) NOT NULL,
-  `
-client_secret` varchar(40) NOT NULL,
+  `client_secret` varchar(40) NOT NULL,
   `
 developer_name` varchar(50) NOT NULL,
   PRIMARY KEY (`client_id`)
@@ -105,8 +104,7 @@ developer_name` varchar(50) NOT NULL,
 
 /*Data for the table `developer_account` */
 
-insert  into `developer_account`(`client_id`,`
-client_secret`,`
+insert  into `developer_account`(`client_id`,`client_secret`,`
 developer_name`) values 
 ('e7UpVoVt99','ma3y05ca-8ayh-qg1p-o2hb-iuz1hs1cxuyb','dev0'),
 ('fbHNOU7q5v','t87w1ihi-sd8p-g0v4-ascc-qlx31lxx2628','dev1');
@@ -200,14 +198,15 @@ CREATE TABLE `subscription_plan` (
   `plan_hit_amount` int(11) NOT NULL,
   `is_plan_available` tinyint(1) NOT NULL DEFAULT 1 COMMENT '1 = available, 0 = unavailable',
   PRIMARY KEY (`plan_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4;
 
 /*Data for the table `subscription_plan` */
 
 insert  into `subscription_plan`(`plan_id`,`plan_name`,`plan_desc`,`plan_price`,`plan_hit_amount`,`is_plan_available`) values 
 (1,'Basic','Basic API Plan',1000,10,1),
 (2,'Ultra','Just right amount of API access',5000,60,1),
-(3,'Giga','Unlimited-like experience',40000,500,1);
+(3,'Giga','Unlimited-like experience',40000,500,1),
+(4,'Extra','Just for Testing',1000,100,1);
 
 /*Table structure for table `users` */
 
@@ -220,6 +219,7 @@ CREATE TABLE `users` (
   `email` varchar(50) NOT NULL,
   `fname` varchar(50) NOT NULL,
   `lname` varchar(50) NOT NULL,
+  `balance` int(11) DEFAULT 0,
   `password` varchar(50) NOT NULL,
   `date_of_birth` timestamp NOT NULL DEFAULT current_timestamp(),
   `date_registered` timestamp NOT NULL DEFAULT current_timestamp(),
@@ -232,11 +232,11 @@ CREATE TABLE `users` (
 
 /*Data for the table `users` */
 
-insert  into `users`(`id`,`apikey`,`apihit`,`email`,`fname`,`lname`,`password`,`date_of_birth`,`date_registered`,`date_updated`,`is_active`,`id_card_dir`) values 
-(1,'BAs3XiTqng',-32,'gareth05@mail.com','Gareth','Newman','asdfasdf','1994-08-07 00:00:00','2022-05-06 10:04:26','2022-05-06 10:04:26',1,'/uploads/BAs3XiTqng'),
-(2,'yDx4YM74IJ',5,'jayjay.max@mail.com','Jeremy','Kazimir','asdfasdf','2022-05-26 16:05:41','2022-05-26 15:52:49','2022-05-26 16:05:41',1,'/uploads/yDx4YM74IJ'),
-(3,'kJFjFArT5o',5,'Mar.see@mail.com','Marceline','Smith','nintendo','2000-10-07 00:00:00','2022-06-11 20:40:19','2022-06-11 21:26:28',1,'/uploads/kJFjFArT5o'),
-(4,'VMIHfwZqTm',5,'KatieHughes123@mail.com','Katie','Hughes','abcd1234','1999-10-19 00:00:00','2022-06-11 21:27:46','2022-06-11 21:27:46',1,'/uploads/VMIHfwZqTm');
+insert  into `users`(`id`,`apikey`,`apihit`,`email`,`fname`,`lname`,`balance`,`password`,`date_of_birth`,`date_registered`,`date_updated`,`is_active`,`id_card_dir`) values 
+(1,'BAs3XiTqng',10,'gareth05@mail.com','Gareth','Newman',100000,'asdfasdf','1994-08-07 00:00:00','2022-05-06 10:04:26','2022-05-06 10:04:26',1,'/uploads/BAs3XiTqng'),
+(2,'yDx4YM74IJ',5,'jayjay.max@mail.com','Jeremy','Kazimir',0,'asdfasdf','2022-05-26 16:05:41','2022-05-26 15:52:49','2022-05-26 16:05:41',1,'/uploads/yDx4YM74IJ'),
+(3,'kJFjFArT5o',5,'Mar.see@mail.com','Marceline','Smith',0,'nintendo','2000-10-07 00:00:00','2022-06-11 20:40:19','2022-06-11 21:26:28',1,'/uploads/kJFjFArT5o'),
+(4,'VMIHfwZqTm',5,'KatieHughes123@mail.com','Katie','Hughes',0,'abcd1234','1999-10-19 00:00:00','2022-06-11 21:27:46','2022-06-11 21:27:46',1,'/uploads/VMIHfwZqTm');
 
 /*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
 /*!40014 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS */;
