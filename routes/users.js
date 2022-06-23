@@ -49,7 +49,7 @@ const upload=multer({
 
 // ------------------ VAR ------------------
 const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-const key = "Bearer xbaAPYEU6BRJVxWJTNCOMWcOknRe";
+const key = "Bearer ODORZjD1Ed3BAU52BpFIfWk0SRYt";
 
 
 // ------------------ FUNCTION ------------------
@@ -192,7 +192,7 @@ router.post("/register", upload.none(), async function (req, res) {
         } while (check_api.length > 0);
 
         let insert_user = await executeQuery(`insert into users
-            values('',"${apikey}", 5, "${email}", "${fname}", "${lname}", "${password}", STR_TO_DATE("${date_of_birth}", "%d/%m/%YYYY"),
+            values('',"${apikey}", 5, "${email}", "${fname}", "${lname}",0, "${password}", STR_TO_DATE("${date_of_birth}", "%d/%m/%YYYY"),
             NOW(), NOW(), 1,'')`);
         if (insert_user) {
             return res.status(200).send({
@@ -533,9 +533,9 @@ router.get("/searchHotel", [checkUser, upload.none()], async function (req, res)
                 'Authorization': key
             }
         });
-    // console.log(cityName.data.data);
+    
     let city = cityName.data.data;
-    if (city.length === 0) {
+    if (city == null) {
         return res.status(404).send({
             message: "No data for city " + idCity
         });

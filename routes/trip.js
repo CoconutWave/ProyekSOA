@@ -8,7 +8,7 @@ const axios = require("axios");
 const jwt = require("jsonwebtoken");
 
 // ------------------ VAR ------------------
-const key = "Bearer xbaAPYEU6BRJVxWJTNCOMWcOknRe";
+const key = "Bearer ODORZjD1Ed3BAU52BpFIfWk0SRYt";
 const secret = "proyeksoauserbagian";
 
 // ------------------ FUNCTION ------------------
@@ -152,7 +152,7 @@ router.post("/city/:idTrip", checkUser, async function(req, res){
         });
     console.log(cityName.data.data);
     let city = cityName.data.data;
-    if(city.length === 0){
+    if(city == null){
         return res.status(404).send({message:"No data for city "+idCity});
     }
 
@@ -226,7 +226,7 @@ router.post("/hotel/:idTrip", checkUser, async function(req, res){
         });
     console.log(hotelData.data.data);
     let hotel = hotelData.data.data;
-    if(hotel.length === 0){
+    if(hotel == null){
         return res.status(404).send({message:"No data for hotel "+idHotel});
     }
     //return res.status(404).send(hotel[0]);
@@ -320,7 +320,7 @@ router.post("/activity/:idTrip", checkUser, async function(req, res){
         });
     console.log(ActivityData.data.data);
     let act = ActivityData.data.data;
-    if(act.length === 0){
+    if(act == null){
         return res.status(404).send({message:"No data for Activity "+idActivity});
     }
     //return res.status(200).send(act);
