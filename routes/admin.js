@@ -10,7 +10,7 @@ const {
 const jwt = require("jsonwebtoken");
 
 // ------------------ VAR ------------------
-const key = "Bearer iCJpEeXozfR3PLY5s3QHBgFPdmML"; //aku ganti punyaku
+const key = "Bearer xbaAPYEU6BRJVxWJTNCOMWcOknRe";
 let secret = "proyeksoa";
 
 // ------------------ FUNCTION ------------------
@@ -88,7 +88,7 @@ router.post("/login", async function (req, res) {
 
     console.log(req.body);
 
-    let cek = `select * from developer_account where client_id = '${client_id}' and client_secret = '${client_secret}'`;
+    let cek = `select * from developer_account where client_id = '${client_id}'`; //` and client_secret = '${client_secret}'`;
     let hasilCek = await executeQuery(cek);
 
     if (hasilCek.length < 1) return res.status(400).send({
@@ -206,7 +206,7 @@ router.put("/bill/:packageid", async function (req, res) {
 
     try {
         let updatedata = await executeQuery(`select * from subscription_plan where plan_id = ${req.params.packageid}`)
-        if (updatedata.length == 0) {
+        if (updatedata.length === 0) {
             return res.status(404).send({
                 "Message": "Subscription Package not found"
             });
@@ -244,7 +244,7 @@ router.delete("/bill/:packageid", async function (req, res) {
 
     try {
         let updatedata = await executeQuery(`select * from subscription_plan where plan_id = ${req.params.packageid}`)
-        if (updatedata.length == 0) {
+        if (updatedata.length === 0) {
             return res.status(404).send({
                 "Message": "Subscription Package not found"
             });
@@ -286,7 +286,7 @@ router.get("/user", async function (req, res) {
             from users where email = '${email}'
             and is_active = 1`);
         if (user.length < 1) {
-            return res.status(401).send({
+            return res.status(404).send({
                 "message": "User not found"
             })
         }
@@ -294,7 +294,7 @@ router.get("/user", async function (req, res) {
         let active = "active";
         if (user[0].is_active === 0) active = "inactive";
 
-        return res.status(401).send({
+        return res.status(200).send({
             "id": user[0].id,
             "email": user[0].email,
             "name": user[0].fname + " " + user[0].lname,
@@ -324,7 +324,7 @@ router.get("/user", async function (req, res) {
             array.push(temp);
         }
 
-        return res.status(401).send({
+        return res.status(200).send({
             array
         });
     }
@@ -353,7 +353,7 @@ router.delete("/user/:email", async function (req, res) {
             where email = '${email}'
             and is_active = 1`);
         if (user.length < 1) {
-            return res.status(400).send({
+            return res.status(404).send({
                 "message": "User not found"
             })
         }
@@ -364,11 +364,11 @@ router.delete("/user/:email", async function (req, res) {
             where email = '${user[0].email}'`);
 
         if (update) {
-            return res.status(400).send({
+            return res.status(200).send({
                 "message": "Successfully deleted",
             })
         } else {
-            return res.status(400).send({
+            return res.status(500).send({
                 "message": "Can't delete",
             })
         }

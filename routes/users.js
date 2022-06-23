@@ -32,7 +32,7 @@ const upload = multer({
 
 // ------------------ VAR ------------------
 const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-const key = "Bearer AehwZVqMtmQtrfmCcKSmPqDS71pu"; //aku ganti punyaku
+const key = "Bearer xbaAPYEU6BRJVxWJTNCOMWcOknRe";
 
 
 // ------------------ FUNCTION ------------------
@@ -244,11 +244,19 @@ router.post("/login", upload.none(), async function (req, res) {
 //update user [DONE]
 router.put("/update", [checkUser, upload.none()], async function (req, res) {
     let header = req.header('x-auth-token');
+    try {
+        header = jwt.verify(header, secret);
+    } catch (error) {
+        console.log(error);
+        return res.status(400).send({
+            "msg": "token tidak valid!"
+        });
+    }
+    let apikey = header.apikey;
     const user = await executeQuery(`select * 
             from users 
-            where apikey = '${header}'
+            where apikey = '${apikey}'
             and is_active = 1`);
-
     let fname = user[0].fname;
     let lname = user[0].lname;
     let password = user[0].password;
@@ -402,12 +410,12 @@ router.post("/package/:idpackage", [checkUser], async function (req, res) {
         }
         package = package[0]
         let user = await executeQuery(`select * from users where id = ${req.header.user_id}`)
-        if (user.balance < package.plan_price) {
+        if (user[0].balance < package.plan_price) {
             return res.status(401).send({
                 message: "Balance is not enough"
             });
         }
-        await executeQuery(`update users set balance = ${user.balance-package.plan_price}, apihit= ${package.plan_hit_amount} where id = '${req.header.user_id}' and is_active = 1`)
+        await executeQuery(`update users set balance = ${user[0].balance-package.plan_price}, apihit= ${package.plan_hit_amount} where id = '${req.header.user_id}' and is_active = 1`)
         return res.status(201).send({
             message: `${package.plan_name} package has been bought, thank you and have a nice day :)`
         });

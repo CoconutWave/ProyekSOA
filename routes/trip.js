@@ -8,7 +8,7 @@ const axios = require("axios");
 const jwt = require("jsonwebtoken");
 
 // ------------------ VAR ------------------
-const key = "Bearer NUVJypq6nhfC15ItHwdA4ln1v0vA";
+const key = "Bearer xbaAPYEU6BRJVxWJTNCOMWcOknRe";
 const secret = "proyeksoauserbagian";
 
 // ------------------ FUNCTION ------------------
