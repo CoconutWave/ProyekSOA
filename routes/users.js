@@ -11,11 +11,14 @@ const jwt = require("jsonwebtoken");
 const secret = "proyeksoauserbagian";
 
 const storage = multer.diskStorage({
-    destination: "uploads/",
-    filename: function (req, file, cb) {
+    destination: function(req,file,callback){
+        callback(null,'./uploads');
+    },
+    filename: async function (req, file, cb) {
         // let date = new Date();
         // console.log(date.toString());
         const extension = file.originalname.split('.')[file.originalname.split('.').length - 1];
+        req.body.extension = extension;
         let apikey;
         try {
             apikey = jwt.verify(req.header("x-auth-token"), secret);
@@ -26,8 +29,22 @@ const storage = multer.diskStorage({
         cb(null, apikey.apikey + "." + extension);
     }
 });
-const upload = multer({
-    storage: storage
+function checkFileType(file,cb){
+    const filetypes= /jpeg|jpg|png|gif/;
+    const extname=filetypes.test(file.originalname.split('.')[file.originalname.split('.').length-1]);
+    const mimetype=filetypes.test(file.mimetype);
+    if(mimetype && extname){
+        return cb(null,true);
+    }else{
+        cb(error = 'File yang diupload hanya boleh image!');
+    }
+}
+
+const upload=multer({
+    storage:storage,
+    fileFilter: function(req,file,cb){
+        checkFileType(file,cb);
+    }
 });
 
 // ------------------ VAR ------------------
@@ -289,7 +306,7 @@ router.put("/update", [checkUser, upload.none()], async function (req, res) {
 });
 
 //update photo-user [DONE, need testing]
-router.put("/updatePhoto", [upload.single("IDCard")], async function (req, res) {
+router.put("/updatePhoto", upload.single("IDCard"), async function (req, res) {
     let header = req.header('x-auth-token');
     try {
         header = jwt.verify(header, secret);
@@ -312,10 +329,12 @@ router.put("/updatePhoto", [upload.single("IDCard")], async function (req, res) 
             message: "Internal error!"
         });
     }
-    const extension = req.file.originalname.split('.')[req.file.originalname.split('.').length - 1];
-    console.log(user.length);
+    
+    let ext = req.file.originalname.split('.')[req.file.originalname.split('.').length - 1];
+    console.log(req.file);
+    // console.log(user.length);
     if (user.length === 0) {
-        fs.unlinkSync(`./uploads/${apikey}`+"."+extension);
+        fs.unlinkSync(`./uploads/${apikey}`+"."+ext);
         return res.status(404).send({
             message: "User not found!"
         });
@@ -325,10 +344,12 @@ router.put("/updatePhoto", [upload.single("IDCard")], async function (req, res) 
             message: "User deleted!"
         });
     }
-
+    
     try {
-        fs.unlinkSync(user[0].id_card_dir);
-        let update_user = await executeQuery(`update users set id_card_dir = "./uploads/${apikey}.${extension}" where id = ${user[0].id}`);
+        // if(user[0].id_card_dir != null){
+        //     fs.unlinkSync(user[0].id_card_dir);
+        // }
+        let update_user = await executeQuery(`update users set id_card_dir = "./uploads/${apikey}.${ext}" where id = ${user[0].id}`);
         let message = "ID Card photo successfully updated";
         // console.log(user[0].id_card_dir);
         if (user[0].id_card_dir == null) {
@@ -337,7 +358,7 @@ router.put("/updatePhoto", [upload.single("IDCard")], async function (req, res) 
         return res.status(200).send({
             message: message,
             API_key: user[0].apikey,
-            id_card_directory: `./uploads/${apikey}.${extension}`
+            id_card_directory: `./uploads/${apikey}.${ext}`
         });
     } catch (error) {
         console.log(error);
