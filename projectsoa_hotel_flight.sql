@@ -1,6 +1,6 @@
 /*
-SQLyog Community v13.1.9 (64 bit)
-MySQL - 10.4.24-MariaDB : Database - soaproject_hotel_flight
+SQLyog Community v13.1.7 (64 bit)
+MySQL - 10.4.20-MariaDB : Database - soaproject_hotel_flight
 *********************************************************************
 */
 
@@ -233,10 +233,10 @@ CREATE TABLE `users` (
 /*Data for the table `users` */
 
 insert  into `users`(`id`,`apikey`,`apihit`,`email`,`fname`,`lname`,`balance`,`password`,`date_of_birth`,`date_registered`,`date_updated`,`is_active`,`id_card_dir`) values 
-(1,'BAs3XiTqng',10,'gareth05@mail.com','Gareth','Newman',100000,'asdfasdf','1994-08-07 00:00:00','2022-05-06 10:04:26','2022-05-06 10:04:26',1,'/uploads/BAs3XiTqng'),
-(2,'yDx4YM74IJ',5,'jayjay.max@mail.com','Jeremy','Kazimir',0,'asdfasdf','2022-05-26 16:05:41','2022-05-26 15:52:49','2022-05-26 16:05:41',1,'/uploads/yDx4YM74IJ'),
-(3,'kJFjFArT5o',5,'Mar.see@mail.com','Marceline','Smith',0,'nintendo','2000-10-07 00:00:00','2022-06-11 20:40:19','2022-06-11 21:26:28',1,'/uploads/kJFjFArT5o'),
-(4,'VMIHfwZqTm',5,'KatieHughes123@mail.com','Katie','Hughes',0,'abcd1234','1999-10-19 00:00:00','2022-06-11 21:27:46','2022-06-11 21:27:46',1,'/uploads/VMIHfwZqTm');
+(1,'BAs3XiTqng',10,'gareth05@mail.com','Gareth','Newman',100000,'asdfasdf','1994-08-07 00:00:00','2022-05-06 10:04:26','2022-05-06 10:04:26',1,'./uploads/BAs3XiTqng.png'),
+(2,'yDx4YM74IJ',5,'jayjay.max@mail.com','Jeremy','Kazimir',0,'asdfasdf','2022-05-26 16:05:41','2022-05-26 15:52:49','2022-05-26 16:05:41',1,'./uploads/yDx4YM74IJ.jpg'),
+(3,'kJFjFArT5o',5,'Mar.see@mail.com','Marceline','Smith',0,'nintendo','2000-10-07 00:00:00','2022-06-11 20:40:19','2022-06-11 21:26:28',1,'./uploads/kJFjFArT5o.jpg'),
+(4,'VMIHfwZqTm',1,'KatieHughes123@mail.com','Katie','Hughes',0,'abcd1234','1999-10-19 00:00:00','2022-06-11 21:27:46','2022-06-11 21:27:46',1,'./uploads/VMIHfwZqTm.jpg');
 
 /*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
 /*!40014 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS */;
