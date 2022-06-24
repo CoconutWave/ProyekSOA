@@ -8,7 +8,7 @@ const axios = require("axios");
 const jwt = require("jsonwebtoken");
 
 // ------------------ VAR ------------------
-const key = "Bearer ODORZjD1Ed3BAU52BpFIfWk0SRYt";
+const key = "Bearer IxiBxn5wqwFllz1yzyRrK85wXe1T";
 const secret = "proyeksoauserbagian";
 
 // ------------------ FUNCTION ------------------
@@ -149,7 +149,17 @@ router.post("/city/:idTrip", checkUser, async function(req, res){
             headers: {
                 'Authorization': key
             }
-        });
+        }).catch(function(error){
+        console.log(error);
+        if(error.response.status === 401) {
+            return res.status(400).send({
+                message: "Internal error! Contact the Developer!"
+            });
+        }
+        if(error.response.status === 400) {
+            return res.status(404).send({message:"No data for city "+idCity});
+        }
+    });
     console.log(cityName.data.data);
     let city = cityName.data.data;
     if(city == null){
@@ -223,7 +233,17 @@ router.post("/hotel/:idTrip", checkUser, async function(req, res){
             headers: {
                 'Authorization': key
             }
-        });
+        }).catch(function(error){
+        console.log(error);
+        if(error.response.status === 401) {
+            return res.status(400).send({
+                message: "Internal error! Contact the Developer!"
+            });
+        }
+        if(error.response.status === 400) {
+            return res.status(404).send({message:"No data for city "+idCity});
+        }
+    });
     console.log(hotelData.data.data);
     let hotel = hotelData.data.data;
     if(hotel == null){
@@ -295,7 +315,6 @@ router.post("/activity/:idTrip", checkUser, async function(req, res){
     }
 
     let idTrip = Number(req.params.idTrip);
-
     let user = await executeQuery(`select * from users where apikey = '${req.header.apikey}'`);
     let trip = await executeQuery(`select * from route where id = ${idTrip}`);
     if(trip.length<1) {
@@ -311,15 +330,48 @@ router.post("/activity/:idTrip", checkUser, async function(req, res){
 
     let idCity = req.body.city.toUpperCase();
     let countryCode = req.body.country.toUpperCase();
+    let checkCity = await axios.get(
+        `https://test.api.amadeus.com/v1/reference-data/locations/cities?countryCode=${countryCode}&keyword=${idCity}&`, {
+            headers: {
+                'Authorization': key
+            }
+        }).catch(function(error){
+        console.log(error);
+        if(error.response.status === 401) {
+            return res.status(400).send({
+                message: "Internal error! Contact the Developer!"
+            });
+        }
+        if(error.response.status === 400) {
+            return res.status(404).send({message:"No data for city "+idCity});
+        }
+    });
+    //console.log(checkCity.data.data);
+    let city = checkCity.data.data;
+    if(city == null){
+        return res.status(404).send({message:"No data for city "+idCity});
+    }
+
     let idActivity = req.body.activity.toUpperCase();
     let ActivityData = await axios.get(
         `https://test.api.amadeus.com/v1/reference-data/locations/pois/${idActivity}`, {
             headers: {
                 'Authorization': key
             }
-        });
+        }).catch(function(error){
+        console.log(error);
+        if(error.response.status === 401) {
+            return res.status(400).send({
+                message: "Internal error! Contact the Developer!"
+            });
+        }
+        if(error.response.status === 400) {
+            return res.status(404).send({message:"No data for city "+idCity});
+        }
+    });
     console.log(ActivityData.data.data);
     let act = ActivityData.data.data;
+    //return res.status(200).send(act);
     if(act == null){
         return res.status(404).send({message:"No data for Activity "+idActivity});
     }

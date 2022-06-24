@@ -49,7 +49,7 @@ const upload=multer({
 
 // ------------------ VAR ------------------
 const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-const key = "Bearer ODORZjD1Ed3BAU52BpFIfWk0SRYt";
+const key = "Bearer d6D2x4vv2j35GrPPQu9TONjbtQYb";
 
 
 // ------------------ FUNCTION ------------------
@@ -393,7 +393,7 @@ router.post("/recharge", [checkUser], async function (req, res) {
         user = user[0]
         console.log(user.balance);
         console.log(req.body.balance_amount);
-        executeQuery(`update users set balance = ${user.balance+req.body.balance_amount} where id = '${req.header.user_id}' and is_active = 1`)
+        await executeQuery(`update users set balance = ${user.balance+req.body.balance_amount} where id = '${req.header.user_id}' and is_active = 1`)
         return res.status(201).send({
             message: `${user.fname}'s balance has been added by Rp.${req.body.balance_amount}`
         });
@@ -467,7 +467,14 @@ router.get("/searchFlight/:airportCode", [checkUser, upload.none()], async funct
                     headers: {
                         'Authorization': key
                     }
-                })
+                }).catch(function(error){
+                console.log(error);
+                if(error.response.status === 401) {
+                    return res.status(400).send({
+                        message: "Internal error! Contact the Developer!"
+                    });
+                }
+            });
             let data = hasil.data.data;
             console.log(data);
 
@@ -532,7 +539,14 @@ router.get("/searchHotel", [checkUser, upload.none()], async function (req, res)
             headers: {
                 'Authorization': key
             }
-        });
+        }).catch(function(error){
+        console.log(error);
+        if(error.response.status === 401) {
+            return res.status(400).send({
+                message: "Internal error! Contact the Developer!"
+            });
+        }
+    });
     
     let city = cityName.data.data;
     if (city == null) {
@@ -555,7 +569,14 @@ router.get("/searchHotel", [checkUser, upload.none()], async function (req, res)
                 headers: {
                     'Authorization': key
                 }
-            })
+            }).catch(function(error){
+            console.log(error);
+            if(error.response.status === 401) {
+                return res.status(400).send({
+                    message: "Internal error! Contact the Developer!"
+                });
+            }
+        });
         let data = hasil.data.data;
         //console.log(data);
 
@@ -699,8 +720,12 @@ router.get("/searchActivities/:location", [checkUser, upload.none()], async func
                 headers: {
                     'Authorization': key
                 }
-            }
-        );
+            }).catch(function(error){
+            console.log(error);
+            return res.status(400).send({
+                message: "Internal error!"
+            });
+        });
 
         // cek result data
         activities = activities.data.data
