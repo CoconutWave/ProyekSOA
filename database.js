@@ -16,10 +16,10 @@ const mysql = require("mysql");
 // };
 
 const pool = mysql.createPool({
-    host:'localhost',
-    user:'root',
-    password:'',
-    database:'soaproject_hotel_flight',
+    host:'remotemysql.com',
+    user:'0HXWsjXOZq',
+    password:'FTgNh0UE4i',
+    database:'0HXWsjXOZq',
 })
 
 const getPool = () =>{
