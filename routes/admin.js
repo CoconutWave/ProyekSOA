@@ -418,6 +418,13 @@ router.get("/review/:email", async function (req, res) {
                 headers: {
                     'Authorization': key
                 }
+            }).catch(function(error){
+                console.log(error);
+                if(error.response.status === 401) {
+                    return res.status(400).send({
+                        message: "Internal error! Contact the Developer!"
+                    });
+                }
             });
             hotel = hotel.data.data[0];
             const eachReview = {
