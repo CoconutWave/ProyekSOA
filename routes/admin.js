@@ -10,7 +10,8 @@ const {
 const jwt = require("jsonwebtoken");
 
 // ------------------ VAR ------------------
-const key = "Bearer xbaAPYEU6BRJVxWJTNCOMWcOknRe";
+const key_amadeus = process.env.variabelamadeuskey;
+const key = "Bearer "+key_amadeus;
 let secret = "proyeksoa";
 
 // ------------------ FUNCTION ------------------
