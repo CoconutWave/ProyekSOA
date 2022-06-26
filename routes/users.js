@@ -193,8 +193,9 @@ router.post("/register", upload.none(), async function (req, res) {
             check_api = await executeQuery(`select * from users where apikey = "${apikey}"`);
         } while (check_api.length > 0);
 
+        let user_id_count = await executeQuery(`select max(id)+1 as id from users`);
         let insert_user = await executeQuery(`insert into users
-            values('',"${apikey}", 5, "${email}", "${fname}", "${lname}",0, "${password}", STR_TO_DATE("${date_of_birth}", "%d/%m/%YYYY"),
+            values(${user_id_count[0].id},"${apikey}", 5, "${email}", "${fname}", "${lname}",0, "${password}", STR_TO_DATE("${date_of_birth}", "%d/%m/%YYYY"),
             NOW(), NOW(), 1,'')`);
         if (insert_user) {
             return res.status(200).send({

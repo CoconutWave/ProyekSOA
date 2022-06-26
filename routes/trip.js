@@ -87,8 +87,9 @@ router.post("/", checkUser, async function (req, res) {
     let user = await executeQuery(`select * from users where apikey = '${req.header.apikey}'`);
 
     try {
+        let route_id_count = await executeQuery(`select max(id)+1 as id from route`);
         let insert = await executeQuery(`insert into route
-            values('',"${user[0].id}","${route_name}", NOW(), 0)`);
+            values(${route_id_count[0].id},"${user[0].id}","${route_name}", NOW(), 0)`);
         if (insert) {
             return res.status(200).send({
                 message: "Add New Trip successfully!",
@@ -168,8 +169,9 @@ router.post("/city/:idTrip", checkUser, async function(req, res){
     }
 
     try {
+        let d_route_id_count = await executeQuery(`select max(id)+1 as id from d_route`);
         let insert = await executeQuery(`insert into d_route
-            values('', ${idTrip},"${idCity}","${countryCode}")`);
+            values("${d_route_id_count}", ${idTrip},"${idCity}","${countryCode}")`);
         if (insert) {
             return res.status(200).send({
                 Message: "Add New City To Trip successfully!",
@@ -258,8 +260,9 @@ router.post("/hotel/:idTrip", checkUser, async function(req, res){
     let checkRoute = await executeQuery(`select * from d_route where route_id = '${idTrip}' and city_id = '${idCity}' and country_id = '${countryCode}'`);
     if(checkRoute.length<1) {
         try {
+            let d_route_id_count = await executeQuery(`select max(id)+1 as id from d_route`);
             let insert = await executeQuery(`insert into d_route
-            values('', ${idTrip},"${idCity}","${countryCode}")`);
+            values(${d_route_id_count[0].id}, ${idTrip},"${idCity}","${countryCode}")`);
             if (insert) {
                 console.log({
                     Message: "Add New City To Trip successfully!",
@@ -275,8 +278,9 @@ router.post("/hotel/:idTrip", checkUser, async function(req, res){
     }
     try {
         let check = await executeQuery(`select * from d_route where route_id = '${idTrip}' and city_id = '${idCity}' and country_id = '${countryCode}'`);
+        let d_hotel_id_count = await executeQuery(`select max(id)+1 as id from d_hotel`);
         let insert = await executeQuery(`insert into d_hotel
-            values('',${check[0].id},"${idHotel}","${hotel[0].name}")`);
+            values(${d_hotel_id_count[0].id},${check[0].id},"${idHotel}","${hotel[0].name}")`);
         if (insert) {
             return res.status(200).send({
                 Message: "Add New Hotel To Trip successfully!",
@@ -380,8 +384,9 @@ router.post("/activity/:idTrip", checkUser, async function(req, res){
     let check = await executeQuery(`select * from d_route where route_id = '${idTrip}' and city_id = '${idCity}' and country_id = '${countryCode}'`);
     if(check.length<1) {
         try {
+            let d_route_id_count = await executeQuery(`select max(id)+1 as id from d_route`);
             let insert = await executeQuery(`insert into d_route
-            values('', ${idTrip},"${idCity}","${countryCode}")`);
+            values(${d_route_id_count[0].id}, ${idTrip},"${idCity}","${countryCode}")`);
             if (insert) {
                 console.log({
                     Message: "Add New City To Trip successfully!",
@@ -396,8 +401,9 @@ router.post("/activity/:idTrip", checkUser, async function(req, res){
         }
     }
     try {
+        let d_activity_id_count = await executeQuery(`select max(id)+1 as id from d_activity`);
         let insert = await executeQuery(`insert into d_activity
-            values('',${check[0].id},"${idActivity}","${act.name}","${act.category}")`);
+            values(${d_activity_id_count[0].id},${check[0].id},"${idActivity}","${act.name}","${act.category}")`);
         if (insert) {
             return res.status(200).send({
                 Message: "Add New Activity To Trip successfully!",
