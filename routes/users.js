@@ -673,7 +673,7 @@ router.post("/reviewHotel", [checkUser, upload.none()], async function (req, res
 //cari review hotel [PERIKSA]
 router.get("/reviewHotel/:idHotel?", [checkUser], async function (req, res) {
     if (!req.params.idHotel) {
-        let data = await executeQuery(`select hotel_name as "Hotel Name", AVG(review_score) as "Rating"  from review group by hotel_id`);
+        let data = await executeQuery(`select hotel_name as "Hotel Name", AVG(review_score) as "Rating"  from review group by hotel_id,hotel_name`);
         return res.status(200).send(data)
     } else {
         let idHotel = req.params.idHotel.toUpperCase();
